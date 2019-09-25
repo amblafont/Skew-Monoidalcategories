@@ -1,7 +1,7 @@
 (**
-  Generalisation of the concept of actions, over monoidal categories.
+  Generalisation of the concept of actions, over skew monoidal categories.
 
-  Based on the definitions in the paper "Second-Order and Dependently-Sorted Abstract Syntax" by Marcelo Fiore.
+  Based on the actions over monoidal categories
 **)
 
 Require Import UniMath.Foundations.PartD.
@@ -11,23 +11,23 @@ Require Import UniMath.CategoryTheory.Core.NaturalTransformations.
 Require Import UniMath.CategoryTheory.Core.Functors.
 Require Import UniMath.CategoryTheory.whiskering.
 Require Import UniMath.CategoryTheory.PrecategoryBinProduct.
-Require Import UniMath.CategoryTheory.Monoidal.MonoidalCategories.
-Require Import UniMath.CategoryTheory.Monoidal.MonoidalFunctors.
+Require Import SkewMonoidalCategories.
+Require Import SkewMonoidalFunctors.
 
 Local Open Scope cat.
 
 Section A.
 
-Context (Mon_V : monoidal_precat).
+Context (Mon_V : skewmonoidal_precat).
 
-Let V := monoidal_precat_precat Mon_V.
-Let I := monoidal_precat_unit Mon_V.
-Let tensor := monoidal_precat_tensor Mon_V.
+Let V := skewmonoidal_precat_precat Mon_V.
+Let I := skewmonoidal_precat_unit Mon_V.
+Let tensor := skewmonoidal_precat_tensor Mon_V.
 Notation "X ⊗ Y" := (tensor (X , Y)).
 Notation "f #⊗ g" := (#tensor (f #, g)) (at level 31).
-Let α' := monoidal_precat_associator Mon_V.
-Let λ' := monoidal_precat_left_unitor Mon_V.
-Let ρ' := monoidal_precat_right_unitor Mon_V.
+Let α' := skewmonoidal_precat_associator Mon_V.
+Let λ' := skewmonoidal_precat_left_unitor Mon_V.
+Let ρ' := skewmonoidal_precat_right_unitor Mon_V.
 
 Section Actions_Definition.
 
@@ -48,7 +48,7 @@ Proof.
   apply idpath.
 Qed.
 
-Definition action_right_unitor : UU := nat_iso odot_I_functor (functor_identity A).
+Definition action_right_unitor : UU := nat_trans (functor_identity A) odot_I_functor .
 
 Definition odot_x_odot_y_functor : (A ⊠ V) ⊠ V ⟶ A :=
   functor_composite (pair_functor odot (functor_identity _)) odot.
@@ -69,10 +69,10 @@ Proof.
   apply idpath.
 Qed.
 
-Definition action_convertor : UU := nat_iso odot_x_odot_y_functor odot_x_otimes_y_functor.
+Definition action_convertor : UU := nat_trans odot_x_odot_y_functor odot_x_otimes_y_functor.
 
 Definition action_triangle_eq (ϱ : action_right_unitor) (χ : action_convertor) := ∏ (a : A), ∏ (x : V),
-  (pr1 ϱ a) #⊙ (id x) = (pr1 χ ((a, I), x)) · (id a) #⊙ (pr1 λ' x).
+   id _ = (pr1 ϱ a) #⊙ (id x) · (pr1 χ ((a, I), x)) · (id a) #⊙ (pr1 λ' x).
 
 Definition action_pentagon_eq (χ : action_convertor) := ∏ (a : A), ∏ (x y z : V),
   (pr1 χ ((a ⊙ x, y), z)) · (pr1 χ ((a, x), y ⊗ z)) =
@@ -95,24 +95,25 @@ Proof.
   exists tensor.
   exists ρ'.
   exists α'.
-  exact (monoidal_precat_eq Mon_V).
+  exact (skewmonoidal_precat_eq Mon_V).
 Defined.
 
 (* The action induced by a strong monoidal functor U. *)
-Section Strong_Monoidal_Functor_Action.
+(*
+Section Strong_Skew_monoidal_functor_Action.
 
-Context (Mon_A : monoidal_precat).
+Context (Mon_A : skewmonoidal_precat).
 
-Let A := monoidal_precat_precat Mon_A.
-Let I_A := monoidal_precat_unit Mon_A.
-Let tensor_A := monoidal_precat_tensor Mon_A.
+Let A := skewmonoidal_precat_precat Mon_A.
+Let I_A := skewmonoidal_precat_unit Mon_A.
+Let tensor_A := skewmonoidal_precat_tensor Mon_A.
 Notation "X ⊗_A Y" := (tensor_A (X , Y)) (at level 31).
 Notation "f #⊗_A g" := (#tensor_A (f #, g)) (at level 31).
-Let α_A := monoidal_precat_associator Mon_A.
-Let λ_A := monoidal_precat_left_unitor Mon_A.
-Let ρ_A := monoidal_precat_right_unitor Mon_A.
+Let α_A := skewmonoidal_precat_associator Mon_A.
+Let λ_A := skewmonoidal_precat_left_unitor Mon_A.
+Let ρ_A := skewmonoidal_precat_right_unitor Mon_A.
 
-Context (U : strong_monoidal_functor Mon_V Mon_A).
+Context (U : strong_skew_monoidal_functor Mon_V Mon_A).
 
 Definition otimes_U_functor : A ⊠ V ⟶ A := functor_composite (pair_functor (functor_identity _) U) tensor_A.
 
@@ -122,8 +123,8 @@ Proof.
   apply idpath.
 Qed.
 
-Definition U_action_ρ_nat_trans : odot_I_functor otimes_U_functor ⟹ functor_identity A.
-  refine (nat_trans_comp _ _ _ _  (pr1 ρ_A)).
+Definition U_action_ρ_nat_trans : functor_identity A ⟹ odot_I_functor otimes_U_functor.
+  refine (nat_trans_comp _ _ _ (pr1 ρ_A)_  ).
   unfold odot_I_functor.
   pose (ϵ_inv := inv_from_iso (make_iso _ (pr1 (pr2 U)))).
   set (aux := nat_trans_from_functor_fix_snd_morphism_arg _ _ _ tensor_A _ _ ϵ_inv).
@@ -216,6 +217,7 @@ Definition U_action : action.
   exact U_action_plaw.
 Defined.
 
-End Strong_Monoidal_Functor_Action.
+End Strong_Skew_monoidal_functor_Action.
+*)
 
 End A.
