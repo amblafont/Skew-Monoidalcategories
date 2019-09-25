@@ -7,32 +7,32 @@ Require Import UniMath.CategoryTheory.Core.Isos.
 Require Import UniMath.CategoryTheory.Core.Functors.
 Require Import UniMath.CategoryTheory.Core.NaturalTransformations.
 Require Import UniMath.CategoryTheory.PrecategoryBinProduct.
-Require Import UniMath.CategoryTheory.Monoidal.MonoidalCategories.
+Require Import SkewMonoidalCategories.
 Require Import UniMath.CategoryTheory.whiskering.
 
 Local Open Scope cat.
 
 Section Monoidal_Functor.
 
-Context (Mon_C Mon_D : monoidal_precat).
+Context (Mon_C Mon_D : skewmonoidal_precat).
 
-Let C := monoidal_precat_precat Mon_C.
-Let tensor_C := monoidal_precat_tensor Mon_C.
+Let C := skewmonoidal_precat_precat Mon_C.
+Let tensor_C := skewmonoidal_precat_tensor Mon_C.
 Notation "X ⊗_C Y" := (tensor_C (X , Y)) (at level 31).
 Notation "f #⊗_C g" := (# tensor_C (f #, g)) (at level 31).
-Let I_C := monoidal_precat_unit Mon_C.
-Let α_C := monoidal_precat_associator Mon_C.
-Let λ_C := monoidal_precat_left_unitor Mon_C.
-Let ρ_C := monoidal_precat_right_unitor Mon_C.
+Let I_C := skewmonoidal_precat_unit Mon_C.
+Let α_C := skewmonoidal_precat_associator Mon_C.
+Let λ_C := skewmonoidal_precat_left_unitor Mon_C.
+Let ρ_C := skewmonoidal_precat_right_unitor Mon_C.
 
-Let D := monoidal_precat_precat Mon_D.
-Let tensor_D := monoidal_precat_tensor Mon_D.
+Let D := skewmonoidal_precat_precat Mon_D.
+Let tensor_D := skewmonoidal_precat_tensor Mon_D.
 Notation "X ⊗_D Y" := (tensor_D (X , Y)) (at level 31).
 Notation "f #⊗_D g" := (# tensor_D (f #, g)) (at level 31).
-Let I_D := monoidal_precat_unit Mon_D.
-Let α_D := monoidal_precat_associator Mon_D.
-Let λ_D := monoidal_precat_left_unitor Mon_D.
-Let ρ_D := monoidal_precat_right_unitor Mon_D.
+Let I_D := skewmonoidal_precat_unit Mon_D.
+Let α_D := skewmonoidal_precat_associator Mon_D.
+Let λ_D := skewmonoidal_precat_left_unitor Mon_D.
+Let ρ_D := skewmonoidal_precat_right_unitor Mon_D.
 
 Section Monoidal_Functor_Conditions.
 
@@ -69,7 +69,7 @@ Definition monoidal_functor_unitality (ϵ : I_D --> F I_C) (μ : monoidal_functo
   ∏ (x : C),
   (pr1 λ_D (F x) = ϵ #⊗_D (id (F x)) · pr1 μ (I_C, x) · #F (pr1 λ_C x))
   ×
-  (pr1 ρ_D (F x) = (id (F x)) #⊗_D ϵ · pr1 μ (x, I_C) · #F (pr1 ρ_C x)).
+  (#F (pr1 ρ_C x) = pr1 ρ_D (F x) · (id (F x)) #⊗_D ϵ · pr1 μ (x, I_C)  ).
 
 End Monoidal_Functor_Conditions.
 
@@ -90,66 +90,5 @@ Definition strong_monoidal_functor : UU :=
 
 End Monoidal_Functor.
 
-Definition strong_monoidal_functor_functor {Mon Mon' : monoidal_precat} (U : strong_monoidal_functor Mon Mon') := pr1 (pr1 U).
+Definition strong_monoidal_functor_functor {Mon Mon' : skewmonoidal_precat} (U : strong_monoidal_functor Mon Mon') := pr1 (pr1 U).
 Coercion strong_monoidal_functor_functor : strong_monoidal_functor >-> functor.
-
-Section swapped_tensor.
-
-  Context {Mon Mon' : monoidal_precat}.
-
-  Let C := monoidal_precat_precat Mon.
-  Let C' := monoidal_precat_precat Mon'.
-  Let tensor := monoidal_precat_tensor Mon.
-  Let tensor' := monoidal_precat_tensor Mon'.
-
-Lemma swapping_of_lax_monoidal_functor_assoc (Fun: lax_monoidal_functor Mon Mon'):
-    let F := pr1 Fun in let μ := pr1 (pr2 (pr2 Fun)) in
-  monoidal_functor_associativity (swapping_of_monoidal_precat Mon) (swapping_of_monoidal_precat Mon') F
-                                 (pre_whisker binswap_pair_functor μ).
-Proof.
-  induction Fun as [F [ϵ [μ [Hass Hunit]]]].
-  red. intros x y z.
-  set (Hass_inst := Hass z y x).
-  apply pathsinv0. rewrite <- assoc. apply iso_inv_on_right.
-  transparent assert (is : (is_iso (# F ((pr1 (monoidal_precat_associator Mon)) ((z, y), x))))).
-  { apply functor_on_is_iso_is_iso.
-    apply monoidal_precat_associator.
-  }
-  set (Hass_inst' := iso_inv_on_left _ _ _ _ _ (_,, is) _ (! Hass_inst)).
-  eapply pathscomp0.
-  { exact Hass_inst'. }
-  clear Hass_inst Hass_inst'.
-  do 2 rewrite assoc.
-  apply cancel_precomposition.
-  eapply pathscomp0.
-  2: { cbn. apply functor_on_inv_from_iso'. }
-  apply idpath.
-Qed.
-
-Definition swapping_of_lax_monoidal_functor: lax_monoidal_functor Mon Mon' ->
-  lax_monoidal_functor (swapping_of_monoidal_precat Mon)
-                       (swapping_of_monoidal_precat Mon').
-Proof.
-  intro Fun.
-  induction Fun as [F [ϵ [μ [Hass Hunit]]]].
-  use mk_lax_monoidal_functor.
-  - exact F.
-  - exact ϵ.
-  - exact (pre_whisker binswap_pair_functor μ).
-  - apply (swapping_of_lax_monoidal_functor_assoc (F,, (ϵ,, (μ,, (Hass,, Hunit))))).
-  - abstract ( red; intro x; induction (Hunit x) as [Hunit1 Hunit2]; split; assumption ).
-Defined.
-
-Definition swapping_of_strong_monoidal_functor: strong_monoidal_functor Mon Mon' ->
-  strong_monoidal_functor (swapping_of_monoidal_precat Mon)
-                          (swapping_of_monoidal_precat Mon').
-Proof.
-  intro Fun.
-  induction Fun as [L [Hϵ Hμ]].
-  apply (tpair _ (swapping_of_lax_monoidal_functor L)).
-  split.
-  - exact Hϵ.
-  - exact (pre_whisker_iso_is_iso binswap_pair_functor (pr1 (pr2 (pr2 L))) Hμ).
-Defined.
-
-End swapped_tensor.
