@@ -103,20 +103,23 @@ Qed.
 (* α *)
 Definition associator : UU :=
   nat_trans assoc_left assoc_right.
+
+Identity Coercion associator_nat : associator >-> nat_trans.
+
 (* This definition goes in the opposite direction of that by Mac Lane (CWM 2nd ed., p.162)
    but conforms to the def. on Wikipedia. *)
 
 Definition rho_lambda_eq (λ' : left_unitor) (ρ' : right_unitor) : UU :=
-  ρ' I ⋅ λ' I = id I.
+  ρ' I · λ' I = id I.
 
 Definition triangle_eq (λ' : left_unitor) (ρ' : right_unitor) (α' : associator) : UU :=
    ∏ (a b : C), id (a ⊗ b) = pr1 ρ' a #⊗ id b  · pr1 α' ((a, I), b) · id a #⊗ pr1 λ' b .
 
 Definition alpha_lambda_eq (λ' : left_unitor) (ρ' : right_unitor) (α' : associator) : UU :=
-   ∏ (a b : C), α' ((I, a), b) ⋅ λ' (A⊗B) = λ' A #⊗ id B.
+   ∏ (a b : C), α' ((I, a), b) · λ' (a ⊗ b) = λ' a #⊗ id b.
 
 Definition rho_alpha_eq (λ' : left_unitor) (ρ' : right_unitor) (α' : associator) : UU :=
-   ∏ (a b : C), rho' (A⊗B) ⋅ α' ((A,B),I) = id A #⊗ ρ' B.
+   ∏ (a b : C), ρ' (a⊗b) · α' ((a,b),I) = id a #⊗ ρ' b.
 
 Definition pentagon_eq (α' : associator) : UU :=
   ∏ (a b c d : C), pr1 α' ((a ⊗ b, c), d) · pr1 α' ((a, b), c ⊗ d) =
@@ -130,7 +133,9 @@ Definition skewmonoidal_precat : UU :=
   ∑ λ' : left_unitor tensor I,
   ∑ ρ' : right_unitor tensor I,
   ∑ α' : associator tensor,
-         (triangle_eq tensor I λ' ρ' α') × (pentagon_eq tensor α').
+         (rho_lambda_eq tensor I λ' ρ') × (triangle_eq tensor I λ' ρ' α') ×
+      (alpha_lambda_eq tensor I λ' ρ' α') × (rho_alpha_eq tensor I λ' ρ' α') ×
+                               (pentagon_eq tensor α') .
 
 
 Definition skewmonoidal_precat_struct : UU :=
@@ -145,8 +150,11 @@ Definition mk_skewmonoidal_precat_struct (C: precategory)(tensor: C ⊠ C ⟶ C)
 
 Definition mk_skewmonoidal_precat (C: precategory)(tensor: C ⊠ C ⟶ C)(I: C)
   (λ': left_unitor tensor I)(ρ': right_unitor tensor I)(α': associator tensor)
-  (eq1: triangle_eq tensor I λ' ρ' α')(eq2: pentagon_eq tensor α'): skewmonoidal_precat :=
-  (C,, (tensor,, (I,, (λ',, (ρ',, (α',, (eq1,, eq2))))))).
+         (eq1 : rho_lambda_eq tensor I λ' ρ') (eq2 : triangle_eq tensor I λ' ρ' α')
+      (eq3 : alpha_lambda_eq tensor I λ' ρ' α')  (eq4 : rho_alpha_eq tensor I λ' ρ' α')
+                               (eq5 : pentagon_eq tensor α')
+  : skewmonoidal_precat :=
+  (C,, tensor,, I,, λ',, ρ',, α',, eq1,, eq2 ,, eq3 ,, eq4 ,, eq5).
 
 Section Skewmonoidal_precat_Accessors.
 
@@ -164,7 +172,19 @@ Definition skewmonoidal_precat_right_unitor := pr1 (pr2 (pr2 (pr2 (pr2 M)))).
 
 Definition skewmonoidal_precat_associator := pr1 (pr2 (pr2 (pr2 (pr2 (pr2 M))))).
 
-Definition skewmonoidal_precat_eq := pr2 (pr2 (pr2 (pr2 (pr2 (pr2 M))))).
+Definition skewmonoidal_precat_eq         := pr2 (pr2 (pr2 (pr2 (pr2 (pr2 M))))).
+Notation eq := skewmonoidal_precat_eq.
+(* Notation ρ' := skewmonoidal_precat_left_unitor. *)
+(* Notation λ' := skewmonoidal_precat_right_unitor. *)
+(* Notation I := skewmonoidal_precat_unit. *)
+
+Definition skewmonoidal_precat_rho_lambda_eq :  _ = _ := pr1 eq.
+Definition skewmonoidal_precat_triangle_eq := pr1 (pr2 eq).
+Definition skewmonoidal_precat_alpha_lambda_eq := pr1 (pr2 (pr2 eq)).
+Definition skewmonoidal_precat_rho_alpha_eq  := pr1 (pr2 (pr2 (pr2 eq))).
+Definition skewmonoidal_precat_pentagon_eq :=  (pr2 (pr2 (pr2 (pr2 eq)))).
+
+(* Definition skewmonoidal_precat_rho_lambda_eq : ρ' I · λ' I = id (I : pr1 M). := pr2 (pr2 (pr2 (pr2 (pr2 (pr2 M))))). *)
 
 End Skewmonoidal_precat_Accessors.
 
