@@ -61,6 +61,8 @@ Qed.
 (* λ *)
 Definition left_unitor : UU := nat_trans I_pretensor (functor_identity C).
 
+Identity Coercion left_unitor_nat : left_unitor >-> nat_trans.
+
 (* - ⊗ I *)
 Definition I_posttensor : C ⟶ C := functor_fix_snd_arg _ _ _ tensor I.
 
@@ -73,9 +75,12 @@ Qed.
 Definition right_unitor : UU :=
   nat_trans (functor_identity C) I_posttensor .
 
+Identity Coercion right_unitor_nat : right_unitor >-> nat_trans.
+
 (* (- ⊗ =) ⊗ ≡ *)
 Definition assoc_left : (C ⊠ C) ⊠ C ⟶ C :=
   functor_composite (pair_functor tensor (functor_identity _)) tensor.
+
 
 Lemma assoc_left_ok: functor_on_objects assoc_left =
   λ c, (ob1 (ob1 c) ⊗ ob2 (ob1 c)) ⊗ ob2 c.
