@@ -38,13 +38,15 @@ Let V := skewmonoidal_precat_precat Mon_V.
 Let I := skewmonoidal_precat_unit Mon_V.
 Let tensor := skewmonoidal_precat_tensor Mon_V.
 Notation "X ⊗ Y" := (tensor (X , Y)) : object_scope.
-Notation "X ⊗ Y" := (# tensor (X #, Y)) : morphism_scope.
+Notation "f #⊗ g" := (#tensor (f #, g)) (at level 31).
 Let α := skewmonoidal_precat_associator Mon_V.
 Let λ_ := skewmonoidal_precat_left_unitor Mon_V.
 Let ρ := skewmonoidal_precat_right_unitor Mon_V.
 
 
 Definition IModule_ob : UU := ∑ X : V, I --> X × retract (ρ X).
+
+
 
 (* this coercion causes confusion, and it is not inserted when parsing most of the time
    thus removing coercion globally
@@ -69,7 +71,7 @@ Definition IMod_action (X : IModule_ob) : retract (ρ X) :=  (pr2 (pr2 X)).
     >>
  *)
 Definition is_IModule_mor (X Y : IModule_ob) (f : IMod_carrier X --> IMod_carrier Y) : UU
-  := IMod_unit X · f = IMod_unit Y × IMod_action X · f =  (f ⊗ id _)%m · IMod_action Y.
+  := IMod_unit X · f = IMod_unit Y × IMod_action X · f =  (f #⊗ id _) · IMod_action Y.
 
 Lemma isaprop_is_IModule_mor (hs : has_homsets V){X Y : IModule_ob} (f : IMod_carrier X --> IMod_carrier Y)
   : isaprop (is_IModule_mor X Y f).
@@ -106,7 +108,7 @@ Proof.
 Qed.
 
 Lemma IModule_mor_action_commutes (X Y : IModule_ob) (f : IModule_mor X Y)
-  : IMod_action X · f =  (f ⊗ id _)%m · IMod_action Y.
+  : IMod_action X · f =  (f #⊗ id _) · IMod_action Y.
 Proof.
   exact (pr2 (pr2 f)).
 Qed.
@@ -230,6 +232,135 @@ Qed.
 (*   apply idtomor_FunctorIMod_commutes. *)
 (* Qed. *)
 
+(* I is a I-module *)
+Definition IModule_I : precategory_IMod_ob_mor :=
+  (I ,, (id I ,, (λ_ I ,, skewmonoidal_precat_rho_lambda_eq _))).
+
+(* On utilise que l'action de B *)
+Lemma IMod_tensor_isRetract (A : IModule_ob)(B : IModule_ob)
+   : ρ (A ⊗ B) · (α ((A, B), I) · # tensor (id A #, IMod_action B)) = id (A ⊗ B).
+Proof.
+    rewrite assoc.
+    etrans.
+    {
+      apply cancel_postcomposition.
+      apply skewmonoidal_precat_rho_alpha_eq.
+    }
+    etrans.
+    {
+      apply pathsinv0.
+      apply (functor_comp tensor).
+    }
+    etrans;revgoals.
+    {
+      apply (functor_id tensor).
+    }
+    apply maponpaths.
+    apply dirprod_paths.
+    + apply id_left.
+    + apply retract_isRetract.
+Qed.
+Definition IMod_tensor_retract(A : IModule_ob) (B : IModule_ob) : retract (ρ (A ⊗ B)) :=
+  (α ((A , B) , I) · (id A #⊗ IMod_action B)) ,, IMod_tensor_isRetract A B.
+
+(* The tensor product of I-modules is a I-module *)
+Definition IModule_tensor (A : IModule_ob) (B : IModule_ob) : IModule_ob :=
+  (A ⊗ B ,, ρ I · (IMod_unit A #⊗ IMod_unit B) ,, IMod_tensor_retract A B ).
+
+
+(* Notation "X ⊗ Y" := ( *)
+(* (@functor_on_morphisms *)
+(*        (precategory_ob_mor_from_precategory_data *)
+(*           (precategory_data_from_precategory (precategory_binproduct (@pr1 _ _ Mon_V) (@pr1 _ _ Mon_V)))) *)
+(*        (precategory_ob_mor_from_precategory_data (precategory_data_from_precategory (@pr1 _ _ Mon_V))) *)
+(*        (functor_data_from_functor *)
+(*           (precategory_data_from_precategory (precategory_binproduct (@pr1 _ _ Mon_V) (@pr1 _ _ Mon_V))) *)
+(*           (precategory_data_from_precategory (@pr1 _ _ Mon_V)) tensor) *)
+(*        _ *)
+(*        _ *)
+(*        (@tpair *)
+(*           (@precategory_morphisms (precategory_ob_mor_from_precategory_data (precategory_data_from_precategory V)) *)
+(*              (IMod_carrier _) (IMod_carrier _)) *)
+(*           (fun *)
+(*              _ : @precategory_morphisms *)
+(*                    (precategory_ob_mor_from_precategory_data (precategory_data_from_precategory V))  *)
+(*                    (IMod_carrier _) (IMod_carrier _) => *)
+(*            @pr2 _ _ (precategory_ob_mor_from_precategory_data (precategory_data_from_precategory V)) *)
+(*              (IMod_carrier _) (IMod_carrier _)) (mor_from_IModule_mor _ _ X) (mor_from_IModule_mor _ _ Y)) *)
+(*     (* ((((X : V ⟦ _ , _ ⟧) ,, (Y : V ⟦ _ , _ ⟧)) : _ × _ ) : V ⊠ V ⟦ (_ ,, _), (_ ,,_) ⟧) *) *)
+(*        )). *)
+
+                        (* ((((X : V ⟦ _ , _ ⟧) ,, (Y : V ⟦ _ , _ ⟧)) : _ × _ ) : V ⊠ V ⟦ (_ ,, _), (_ ,,_) ⟧)). *)
+(* (functor_data_from_functor (precategory_data_from_precategory (@pr1 _ _ Mon_V ⊠ @pr1 _ _ Mon_V)) *)
+(*        (precategory_data_from_precategory (@pr1 _ _ Mon_V)) tensor) *)
+Lemma IModule_tensor_is_IModule_mor {A B C D : IModule_ob}
+           (f : IModule_mor A B)(g : IModule_mor C D) : is_IModule_mor (IModule_tensor A C) (IModule_tensor B D)
+                                                                       (f #⊗ g).
+Proof.
+  split.
+  cbn.
+  - rewrite <- assoc.
+    apply cancel_precomposition.
+    etrans;[apply pathsinv0,functor_comp|].
+    apply maponpaths.
+    apply dirprod_paths; apply IModule_mor_unit_commutes.
+  - cbn.
+    rewrite <- assoc.
+    etrans.
+    {
+      apply cancel_precomposition.
+      etrans;[apply pathsinv0,functor_comp|].
+      eapply (maponpaths (# tensor) (t2 := (f · id _ #, _))).
+      apply dirprod_paths.
+      + cbn.
+        rewrite id_right , id_left.
+        reflexivity.
+      + cbn.
+        eapply IModule_mor_action_commutes.
+    }
+    apply pathsinv0.
+    etrans.
+    {
+      rewrite assoc.
+      apply cancel_postcomposition.
+      apply (nat_trans_ax α _ _ ((f #, g) #, id _)).
+    }
+    apply pathsinv0.
+    etrans;[|apply assoc].
+    apply cancel_precomposition.
+    apply pathsinv0.
+    exact (! (functor_comp tensor _ _)).
+Qed.
+
+Definition IModule_tensor_mor {A B C D : IModule_ob}
+           (f : IModule_mor A B)(g : IModule_mor C D) : IModule_mor (IModule_tensor A C) (IModule_tensor B D) := _ ,, IModule_tensor_is_IModule_mor f g.
+
+(* first step of definition *)
+Definition IModule_tensor_data (hsC: has_homsets V):
+   functor_data ((IModule hsC)⊠ (IModule hsC))(IModule hsC).
+Proof.
+  set (onobs := fun alg : ((IModule hsC)⊠ (IModule hsC))  => IModule_tensor (pr1 alg)(pr2 alg)).
+  apply (make_functor_data (C' := IModule hsC)  onobs).
+  intros alg1 alg2 m.
+  simpl in m.
+  exact (IModule_tensor_mor (pr1 m) (pr2 m)).
+Defined.
+Lemma IModule_tensor_is_functor (hsC: has_homsets V):
+  is_functor (IModule_tensor_data hsC).
+Proof.
+  split.
+  - intro alg.
+    apply (IModule_mor_eq hsC).
+    apply (functor_id tensor).
+  - intros a b c f g.
+    apply (IModule_mor_eq hsC).
+    etrans;revgoals.
+    apply (functor_comp tensor).
+    apply idpath.
+Qed.
+
+Definition IModule_tensor_functor (hsC: has_homsets V): functor ((IModule hsC)⊠ (IModule hsC))(IModule hsC) :=
+  make_functor (IModule_tensor_data hsC) (IModule_tensor_is_functor hsC).
 
 End IModule_Definition.
 
