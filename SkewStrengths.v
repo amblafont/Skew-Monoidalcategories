@@ -62,7 +62,7 @@ Proof.
   apply idpath.
 Qed.
 
-Definition strength_nat : UU := nat_iso strength_dom strength_codom.
+Definition strength_nat : UU := nat_trans strength_dom strength_codom.
 
 Definition strength_triangle_eq (ϛ : strength_nat) :=
   ∏ (a : A), pr1 ϱ' (F a) · (pr1 ϛ (a, I))   = (#F (pr1 ϱ a)).
