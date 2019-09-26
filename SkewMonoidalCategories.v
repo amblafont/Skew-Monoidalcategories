@@ -106,8 +106,17 @@ Definition associator : UU :=
 (* This definition goes in the opposite direction of that by Mac Lane (CWM 2nd ed., p.162)
    but conforms to the def. on Wikipedia. *)
 
+Definition rho_lambda_eq (λ' : left_unitor) (ρ' : right_unitor) : UU :=
+  ρ' I ⋅ λ' I = id I.
+
 Definition triangle_eq (λ' : left_unitor) (ρ' : right_unitor) (α' : associator) : UU :=
    ∏ (a b : C), id (a ⊗ b) = pr1 ρ' a #⊗ id b  · pr1 α' ((a, I), b) · id a #⊗ pr1 λ' b .
+
+Definition alpha_lambda_eq (λ' : left_unitor) (ρ' : right_unitor) (α' : associator) : UU :=
+   ∏ (a b : C), α' ((I, a), b) ⋅ λ' (A⊗B) = λ' A #⊗ id B.
+
+Definition rho_alpha_eq (λ' : left_unitor) (ρ' : right_unitor) (α' : associator) : UU :=
+   ∏ (a b : C), rho' (A⊗B) ⋅ α' ((A,B),I) = id A #⊗ ρ' B.
 
 Definition pentagon_eq (α' : associator) : UU :=
   ∏ (a b c d : C), pr1 α' ((a ⊗ b, c), d) · pr1 α' ((a, b), c ⊗ d) =
