@@ -267,7 +267,117 @@ Definition IMod_tensor_retract(A : IModule_ob) (B : IModule_ob) : retract (ρ (A
 Definition IModule_tensor (A : IModule_ob) (B : IModule_ob) : IModule_ob :=
   (A ⊗ B ,, ρ I · (IMod_unit A #⊗ IMod_unit B) ,, IMod_tensor_retract A B ).
 
+(* left unitor for IModules *)
 
+Lemma IModule_left_unitor_isIModule_mor x :
+   is_IModule_mor (IModule_tensor IModule_I x) x ( λ_ x).
+Proof.
+  red; cbn; split.
+  - etrans.
+    {
+      rewrite <- assoc.
+      apply cancel_precomposition.
+      apply (nat_trans_ax λ_).
+    }
+    etrans;[apply assoc|].
+    etrans.
+    {
+      apply cancel_postcomposition.
+      apply skewmonoidal_precat_rho_lambda_eq.
+    }
+    apply id_left.
+  - etrans.
+    {
+      rewrite <- assoc.
+      apply cancel_precomposition.
+      apply (nat_trans_ax λ_).
+    }
+    etrans;[apply assoc|].
+    apply cancel_postcomposition.
+    unfold functor_fix_snd_arg_ob.
+    apply skewmonoidal_precat_alpha_lambda_eq.
+Qed.
+
+Definition IModule_left_unitor x : IModule_mor (IModule_tensor (IModule_I) x) x :=
+  (λ_ x ,, IModule_left_unitor_isIModule_mor x).
+
+Lemma IModule_associator_isIModule_mor x y z :
+  is_IModule_mor (IModule_tensor (IModule_tensor x y) z) (IModule_tensor x (IModule_tensor y z)) (α ((x, y), z)).
+Proof.
+  red; cbn; split.
+  - rewrite <- assoc.
+    eapply (pathscomp0 (b := _ · ((ρ I #⊗ id _) · (((IMod_unit x #⊗ IMod_unit y) #⊗ (IMod_unit z)) ·
+                                            α ((_ , _),_))))).
+    {
+      apply cancel_precomposition.
+      rewrite assoc.
+      apply cancel_postcomposition.
+      etrans;[| apply functor_comp].
+      apply maponpaths.
+      apply dirprod_paths.
+      + apply idpath.
+      + apply pathsinv0, id_left.
+    }
+    etrans.
+    {
+      apply cancel_precomposition.
+      apply cancel_precomposition.
+      apply (nat_trans_ax α _ _ (( IMod_unit x #, IMod_unit y) #, IMod_unit z) ).
+    }
+    apply pathsinv0.
+    eapply (pathscomp0 (b := _ · ((id _ #⊗ ρ I ) · ((IMod_unit x #⊗ (IMod_unit y #⊗ IMod_unit z))
+                                             )))).
+    {
+      apply cancel_precomposition.
+      etrans;[| apply functor_comp].
+      eapply (maponpaths (fun f => # tensor (f #, _)) ).
+      apply pathsinv0,id_left.
+    }
+    repeat rewrite assoc.
+    apply cancel_postcomposition.
+    etrans;[|apply assoc].
+    apply pathsinv0.
+    etrans;[| apply cancel_precomposition, (skewmonoidal_precat_rho_alpha_eq Mon_V)].
+    repeat rewrite assoc.
+    apply cancel_postcomposition.
+    apply pathsinv0.
+    apply (nat_trans_ax ρ).
+  - etrans; revgoals.
+    {
+      etrans; revgoals.
+      {
+        apply cancel_precomposition.
+        apply cancel_precomposition.
+        apply (pathscomp0 (b := (id x #⊗ α ((_ , _) , _)) · (id x #⊗ (id y #⊗ IMod_action z)))); revgoals.
+        {
+          etrans.
+          {
+            apply pathsinv0.
+            apply functor_comp.
+          }
+          apply maponpaths.
+          apply dirprod_paths.
+          + apply id_left.
+          + apply idpath.
+        }
+        apply idpath.
+      }
+      repeat rewrite assoc.
+      apply cancel_postcomposition.
+      apply  (skewmonoidal_precat_pentagon_eq Mon_V x y z I).
+    }
+    repeat rewrite <- assoc.
+    apply cancel_precomposition.
+    etrans;[| apply (nat_trans_ax α _ _ ((id x #, id y) #, IMod_action z))].
+    apply cancel_postcomposition.
+    apply (maponpaths (# tensor)).
+    apply dirprod_paths.
+    + apply pathsinv0, (functor_id tensor (x , y)).
+    + apply idpath.
+Qed.
+Definition IModule_associator x y z : IModule_mor (IModule_tensor (IModule_tensor x y) z)
+                                                  (IModule_tensor x (IModule_tensor y z)) :=
+  (α ((x , y) , z)) ,, IModule_associator_isIModule_mor x y z.
 (* Notation "X ⊗ Y" := ( *)
 (* (@functor_on_morphisms *)
 (*        (precategory_ob_mor_from_precategory_data *)

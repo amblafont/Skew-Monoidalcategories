@@ -33,17 +33,19 @@ Let ρ' := skewmonoidal_precat_right_unitor Mon_V.
 Section Actions_Definition.
 
 (* A ⊙ I --> A *)
-
-Section Actions_Natural_Transformations.
-
 Context (hsV : has_homsets V).
-
 Notation "X ⊗ Y" := (IModule_tensor_functor _ hsV (X, Y))  : module_scope.
 (* Notation "f #⊗ g" := (# (IModule_tensor_functor _ hsV) (f #, g)) : module_scope. *)
 Delimit Scope module_scope with M.
 
 Let M := precategory_IModule Mon_V hsV.
 Let IM := (IModule_I Mon_V : M).
+Let λM := (IModule_left_unitor Mon_V).
+Let αM := (IModule_associator Mon_V).
+
+Section Actions_Natural_Transformations.
+
+
 
 Context {A : precategory} (odot : functor (precategory_binproduct A M) A).
 
@@ -81,37 +83,40 @@ Qed.
 
 Definition action_convertor : UU := nat_trans odot_x_odot_y_functor odot_x_otimes_y_functor.
 
-Definition action_triangle_eq (ϱ : action_right_unitor) (χ : action_convertor) : UU.
-    refine ( ∏ (a : A), ∏ (x : M),
-   (* id _ = (((pr1 ϱ a) #⊙ (id x))%M · (pr1 χ ((a, I), x)) · (id a) #⊙ (pr1 λ' x)). *)
-   id _ = (((pr1 ϱ a) #⊙ (id x)) · (pr1 χ ((a, IM), x)) · _)). (*(id a) #⊙ (pr1 λ' (IMod_carrier _ x)))). *)
-    (* refine (id a #⊗ _). *)
-    refine (# odot ( id a #, _)).
-    cbn.
+Definition action_triangle_eq (ϱ : action_right_unitor) (χ : action_convertor) :=
+      ∏ (a : A), ∏ (x : M),
+   id _ = (((pr1 ϱ a) #⊙ (id x)) · (pr1 χ ((a, IM), x)) · (# odot ( id a #,  (λM x :  M  ⟦(IModule_tensor Mon_V IM x) , x⟧)))). 
 
-Definition action_pentagon_eq (χ : action_convertor) := ∏ (a : A), ∏ (x y z : V),
-  (pr1 χ ((a ⊙ x, y), z)) · (pr1 χ ((a, x), y ⊗ z)) =
-  (pr1 χ ((a, x), y)) #⊙ (id z) · (pr1 χ ((a, x ⊗ y), z)) ·
-                                  (id a) #⊙ (pr1 α' ((x, y), z)).
+  Definition action_pentagon_eq (χ : action_convertor) : UU :=
+     ∏ (a : A), ∏ (x y z : M),
+  (pr1 χ ((a ⊙ x, y)%M, z)) · (pr1 χ ((a, x), (y ⊗ z)%M)) =
+  (pr1 χ ((a, x), y)) #⊙ (id z) · (pr1 χ ((a, (x ⊗ y)%M), z)) ·
+                                  (id a) #⊙ (αM x y z : M ⟦ ((x ⊗ y) ⊗ z)%M , (x ⊗ (y ⊗ z))%M ⟧).
 
+  (* TODO: finish the definition
+ some equations are missing: the analogous of the additional equations of skew monoidal cats *)
 End Actions_Natural_Transformations.
 
 (* Action over a monoidal category. *)
-Definition action : UU := ∑ A : precategory, ∑ (odot : A ⊠ V ⟶ A), ∑ (ϱ : action_right_unitor odot), ∑ (χ : action_convertor odot), (action_triangle_eq odot ϱ χ) × (action_pentagon_eq odot χ).
+Definition action : UU := ∑ A : precategory, ∑ (odot : A ⊠ M ⟶ A), ∑ (ϱ : action_right_unitor odot), ∑ (χ : action_convertor odot), (action_triangle_eq odot ϱ χ) × (action_pentagon_eq odot χ).
 
-Definition action_struct : UU := ∑ A : precategory, ∑ (odot : A ⊠ V ⟶ A), ∑ (ϱ : action_right_unitor odot), ∑ (χ : action_convertor odot), unit.
-
-End Actions_Definition.
+Definition action_struct : UU := ∑ A : precategory, ∑ (odot : A ⊠ M ⟶ A), ∑ (ϱ : action_right_unitor odot), ∑ (χ : action_convertor odot), unit.
 
 (* The canonical tensorial action on a monoidal category. *)
+
 Definition tensorial_action : action.
 Proof.
   exists V.
-  exists tensor.
+  exists (pair_functor (functor_identity _) (forget_algebras _ hsV) ∙ tensor).
   exists ρ'.
-  exists α'.
-  exact (skewmonoidal_precat_eq Mon_V).
+  exists (pre_whisker (pair_functor (pair_functor (functor_identity _) (forget_algebras _ hsV))(forget_algebras _ hsV)) α').
+  split.
+  - exact (fun a b => skewmonoidal_precat_triangle_eq Mon_V a (IMod_carrier _ b)).
+  - exact (fun a b c d => skewmonoidal_precat_pentagon_eq Mon_V a (IMod_carrier _ b) (IMod_carrier _ c) (IMod_carrier _ d) ).
 Defined.
+
+End Actions_Definition.
+
 
 (* The action induced by a strong monoidal functor U. *)
 (*

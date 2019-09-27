@@ -1,4 +1,4 @@
-OBJS = SkewMonoidalCategories.vo IModules.vo
+OBJS = SkewMonoidalCategories.vo IModules.vo StructuralActions.vo
 CC = coqc
 FLAGS = -noinit -indices-matter -type-in-type -w none
 
