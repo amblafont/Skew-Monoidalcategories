@@ -84,4 +84,17 @@ End Strengths_Definition.
 *)
 Definition tensorial_strength := strength (tensorial_action Mon_V) (tensorial_action Mon_V).
 
+
 End A.
+
+Section tensorial.
+
+Context {Mon_V : skewmonoidal_precat}.
+Let V := skewmonoidal_precat_precat Mon_V.
+Context {F : V ⟶ V} (st : tensorial_strength _ F).
+Let I := skewmonoidal_precat_unit Mon_V.
+Let tensor := skewmonoidal_precat_tensor Mon_V.
+Notation "X ⊗ Y" := (tensor (X , Y)).
+Definition st_pw (st : tensorial_strength _ F) :
+
+End tensorial.
