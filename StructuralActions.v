@@ -19,16 +19,15 @@ Local Open Scope cat.
 
 Section A.
 
-Context (Mon_V : skewmonoidal_precat).
+Context (V : skewmonoidal_precat).
 
-Let V := skewmonoidal_precat_precat Mon_V.
-Let I := skewmonoidal_precat_unit Mon_V.
-Let tensor := skewmonoidal_precat_tensor Mon_V.
+Let I := (skewmonoidal_precat_unit V).
+Let tensor := (skewmonoidal_precat_tensor V).
 Notation "X ⊗ Y" := (tensor (X , Y)).
 Notation "f #⊗ g" := (#tensor (f #, g)) (at level 31).
-Let α' := skewmonoidal_precat_associator Mon_V.
-Let λ' := skewmonoidal_precat_left_unitor Mon_V.
-Let ρ' := skewmonoidal_precat_right_unitor Mon_V.
+Let α' := (skewmonoidal_precat_associator V).
+Let λ' := (skewmonoidal_precat_left_unitor V).
+Let ρ' := (skewmonoidal_precat_right_unitor V).
 
 Section Actions_Definition.
 
@@ -38,10 +37,11 @@ Notation "X ⊗ Y" := (IModule_tensor_functor _ hsV (X, Y))  : module_scope.
 (* Notation "f #⊗ g" := (# (IModule_tensor_functor _ hsV) (f #, g)) : module_scope. *)
 Delimit Scope module_scope with M.
 
-Let M := precategory_IModule Mon_V hsV.
-Let IM := (IModule_I Mon_V : M).
-Let λM := (IModule_left_unitor Mon_V).
-Let αM := (IModule_associator Mon_V).
+Let M := precategory_IModule V hsV.
+Let IM := (IModule_I V : M).
+(* the *_data does not require hsV *)
+Let λM := (IModule_left_unitor_data V).
+Let αM := (IModule_associator_data V).
 
 Section Actions_Natural_Transformations.
 
@@ -85,7 +85,7 @@ Definition action_convertor : UU := nat_trans odot_x_odot_y_functor odot_x_otime
 
 Definition action_triangle_eq (ϱ : action_right_unitor) (χ : action_convertor) :=
       ∏ (a : A), ∏ (x : M),
-   id _ = (((pr1 ϱ a) #⊙ (id x)) · (pr1 χ ((a, IM), x)) · (# odot ( id a #,  (λM x :  M  ⟦(IModule_tensor Mon_V IM x) , x⟧)))). 
+   id _ = (((pr1 ϱ a) #⊙ (id x)) · (pr1 χ ((a, IM), x)) · (# odot ( id a #,  (λM x :  M  ⟦(IModule_tensor V IM x) , x⟧)))). 
 
   Definition action_pentagon_eq (χ : action_convertor) : UU :=
      ∏ (a : A), ∏ (x y z : M),
@@ -107,12 +107,12 @@ Definition action_struct : UU := ∑ A : precategory, ∑ (odot : A ⊠ M ⟶ A)
 Definition tensorial_action : action.
 Proof.
   exists V.
-  exists (pair_functor (functor_identity _) (forget_algebras _ hsV) ∙ tensor).
+  exists (pair_functor (functor_identity _) (forget_IModules _ hsV) ∙ tensor).
   exists ρ'.
-  exists (pre_whisker (pair_functor (pair_functor (functor_identity _) (forget_algebras _ hsV))(forget_algebras _ hsV)) α').
+  exists (pre_whisker (pair_functor (pair_functor (functor_identity _) (forget_IModules _ hsV))(forget_IModules _ hsV)) α').
   split.
-  - exact (fun a b => skewmonoidal_precat_triangle_eq Mon_V a (IMod_carrier _ b)).
-  - exact (fun a b c d => skewmonoidal_precat_pentagon_eq Mon_V a (IMod_carrier _ b) (IMod_carrier _ c) (IMod_carrier _ d) ).
+  - exact (fun a b => skewmonoidal_precat_triangle_eq V a (IMod_carrier _ b)).
+  - exact (fun a b c d => skewmonoidal_precat_pentagon_eq V a (IMod_carrier _ b) (IMod_carrier _ c) (IMod_carrier _ d) ).
 Defined.
 
 End Actions_Definition.
@@ -133,7 +133,7 @@ Let α_A := skewmonoidal_precat_associator Mon_A.
 Let λ_A := skewmonoidal_precat_left_unitor Mon_A.
 Let ρ_A := skewmonoidal_precat_right_unitor Mon_A.
 
-Context (U : strong_skew_monoidal_functor Mon_V Mon_A).
+Context (U : strong_skew_monoidal_functor V Mon_A).
 
 Definition otimes_U_functor : A ⊠ V ⟶ A := functor_composite (pair_functor (functor_identity _) U) tensor_A.
 

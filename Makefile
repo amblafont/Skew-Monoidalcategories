@@ -7,3 +7,8 @@ all: $(OBJS)
 %.vo: %.v
 	coqc $(FLAGS) $<
 
+clean:
+	rm *.vo
+
+
+

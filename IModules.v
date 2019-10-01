@@ -32,16 +32,36 @@ Delimit Scope morphism_scope with m.
 Delimit Scope object_scope with o.
 Open Scope object_scope.
 
-Context (Mon_V : skewmonoidal_precat).
+Context (V : skewmonoidal_precat).
+Context (hsV : has_homsets V).
 
-Let V := skewmonoidal_precat_precat Mon_V.
-Let I := skewmonoidal_precat_unit Mon_V.
-Let tensor := skewmonoidal_precat_tensor Mon_V.
+Notation I := (skewmonoidal_precat_unit V).
+Notation tensor := (skewmonoidal_precat_tensor V).
+
 Notation "X ⊗ Y" := (tensor (X , Y)) : object_scope.
-Notation "f #⊗ g" := (#tensor (f #, g)) (at level 31).
-Let α := skewmonoidal_precat_associator Mon_V.
-Let λ_ := skewmonoidal_precat_left_unitor Mon_V.
-Let ρ := skewmonoidal_precat_right_unitor Mon_V.
+
+(* The following notation does not work, for an unknown reason (you may use it, but coq
+won't display it).
+
+  Notation "f #⊗ g" := (#tensor (f #, g)) (at level 31).
+  Check  (fun a b c d (f : V ⟦a , b ⟧)(g : V ⟦ c , d ⟧) => idpath (f #⊗ g)).
+
+ Coq affiche alors
+λ (a b c d : V) (f : V ⟦ a, b ⟧) (g : V ⟦ c, d ⟧), idpath (# tensor (f #, g))
+     : ∏ (a b c d : V) (f : V ⟦ a, b ⟧) (g : V ⟦ c, d ⟧), # tensor (f #, g) = # tensor (f #, g)
+
+au lieu de f #⊗ g = f #⊗ g
+
+Our trick then consists in defining tensor_on_mor, defining a notation for it, and
+a tactic or a lemma to rewrite according to its definition
+ *)
+ Let tensor_on_mor {a b c d}(f : V ⟦a , b ⟧)(g : V ⟦ c , d ⟧) : V ⟦ a ⊗ c , b ⊗ d ⟧ := # tensor (f #, g).
+ Infix "#⊗" := (tensor_on_mor) (at level 31).
+
+
+Notation α := (skewmonoidal_precat_associator V).
+Notation λ_ := (skewmonoidal_precat_left_unitor V).
+Notation ρ := (skewmonoidal_precat_right_unitor V).
 
 
 Definition IModule_ob : UU := ∑ X : V, I --> X × retract (ρ X).
@@ -73,10 +93,10 @@ Definition IMod_action (X : IModule_ob) : retract (ρ X) :=  (pr2 (pr2 X)).
 Definition is_IModule_mor (X Y : IModule_ob) (f : IMod_carrier X --> IMod_carrier Y) : UU
   := IMod_unit X · f = IMod_unit Y × IMod_action X · f =  (f #⊗ id _) · IMod_action Y.
 
-Lemma isaprop_is_IModule_mor (hs : has_homsets V){X Y : IModule_ob} (f : IMod_carrier X --> IMod_carrier Y)
+Lemma isaprop_is_IModule_mor {X Y : IModule_ob} (f : IMod_carrier X --> IMod_carrier Y)
   : isaprop (is_IModule_mor X Y f).
 Proof.
-    apply isapropdirprod; apply hs.
+    apply isapropdirprod; apply hsV.
 Qed.
 
 Definition IModule_mor (X Y : IModule_ob) : UU :=
@@ -84,21 +104,21 @@ Definition IModule_mor (X Y : IModule_ob) : UU :=
 
 Coercion mor_from_IModule_mor (X Y : IModule_ob) (f : IModule_mor X Y) : X --> Y := pr1 f.
 
-Definition isaset_IModule_mor (hs : has_homsets V) (X Y : IModule_ob) : isaset (IModule_mor X Y).
+Definition isaset_IModule_mor (X Y : IModule_ob) : isaset (IModule_mor X Y).
 Proof.
   apply (isofhleveltotal2 2).
-  - apply hs.
+  - apply hsV.
   - intro f.
     apply isasetaprop.
-    apply isaprop_is_IModule_mor,hs.
+    apply isaprop_is_IModule_mor .
 Qed.
 
-Definition IModule_mor_eq (hs : has_homsets V) {X Y : IModule_ob} {f g : IModule_mor X Y}
+Definition IModule_mor_eq  {X Y : IModule_ob} {f g : IModule_mor X Y}
   : (f : X --> Y) = g ≃ f = g.
 Proof.
   apply invweq.
   apply subtypeInjectivity.
-  intro a. apply isaprop_is_IModule_mor,hs.
+  intro a. apply isaprop_is_IModule_mor.
 Defined.
 
 Lemma IModule_mor_unit_commutes (X Y : IModule_ob) (f : IModule_mor X Y)
@@ -165,44 +185,39 @@ Proof.
   exact IModule_mor_comp.
 Defined.
 
-Lemma is_precategory_precategory_IMod_data (hs : has_homsets V)
+Lemma is_precategory_precategory_IMod_data
   : is_precategory precategory_IMod_data.
 Proof.
   repeat split; intros; simpl.
   - apply IModule_mor_eq.
-    + apply hs.
     + apply id_left.
   - apply IModule_mor_eq.
-    + apply hs.
     + apply id_right.
   - apply IModule_mor_eq.
-    + apply hs.
     + apply assoc.
   - apply IModule_mor_eq.
-    + apply hs.
     + apply assoc'.
 Qed.
 
-Definition precategory_IModule (hs : has_homsets V)
-  : precategory := tpair _ _ (is_precategory_precategory_IMod_data hs).
+Definition precategory_IModule
+  : precategory := tpair _ _ is_precategory_precategory_IMod_data .
 
-Local Notation IModule := precategory_IModule.
+Local Notation IMOD := precategory_IModule.
 
-Lemma has_homsets_IModule (hs : has_homsets V)
-  : has_homsets (IModule hs).
+Lemma has_homsets_IModule
+  : has_homsets IMOD.
 Proof.
   intros f g.
   apply isaset_IModule_mor.
-  assumption.
 Qed.
 
 
 (** forgetful functor from IModule to its underlying category *)
 
 (* first step of definition *)
-Definition forget_algebras_data (hsC: has_homsets V): functor_data (IModule hsC) V.
+Definition forget_IModules_data : functor_data IMOD V.
 Proof.
-  set (onobs := fun alg : IModule hsC => IMod_carrier alg).
+  set (onobs := fun alg : IMOD => IMod_carrier alg).
   apply (make_functor_data onobs).
   intros alg1 alg2 m.
   simpl in m.
@@ -210,16 +225,16 @@ Proof.
 Defined.
 
 (* the forgetful functor *)
-Definition forget_algebras (hsC: has_homsets V): functor (IModule hsC) V.
+Definition forget_IModules : functor IMOD V.
 Proof.
-  apply (make_functor (forget_algebras_data hsC)).
+  apply (make_functor (forget_IModules_data )).
   abstract ( split; [intro alg; apply idpath | intros alg1 alg2 alg3 m n; apply idpath] ).
 Defined.
 
 
 
 
-Lemma idtomor_FunctorIMod_commutes (hsC: has_homsets V)(X Y: IModule hsC)(e: X = Y): mor_from_IModule_mor _ _ (idtomor _ _ e) = idtomor _ _ (maponpaths IMod_carrier e).
+Lemma idtomor_FunctorIMod_commutes (X Y: IMOD )(e: X = Y): mor_from_IModule_mor _ _ (idtomor _ _ e) = idtomor _ _ (maponpaths IMod_carrier e).
 Proof.
   induction e.
   apply idpath.
@@ -231,6 +246,14 @@ Qed.
 (*   do 2 rewrite eq_idtoiso_idtomor. *)
 (*   apply idtomor_FunctorIMod_commutes. *)
 (* Qed. *)
+
+
+(*
+
+The category of I-modules is skew monoidal
+
+
+*)
 
 (* I is a I-module *)
 Definition IModule_I : precategory_IMod_ob_mor :=
@@ -267,142 +290,7 @@ Definition IMod_tensor_retract(A : IModule_ob) (B : IModule_ob) : retract (ρ (A
 Definition IModule_tensor (A : IModule_ob) (B : IModule_ob) : IModule_ob :=
   (A ⊗ B ,, ρ I · (IMod_unit A #⊗ IMod_unit B) ,, IMod_tensor_retract A B ).
 
-(* left unitor for IModules *)
 
-Lemma IModule_left_unitor_isIModule_mor x :
-   is_IModule_mor (IModule_tensor IModule_I x) x ( λ_ x).
-Proof.
-  red; cbn; split.
-  - etrans.
-    {
-      rewrite <- assoc.
-      apply cancel_precomposition.
-      apply (nat_trans_ax λ_).
-    }
-    etrans;[apply assoc|].
-    etrans.
-    {
-      apply cancel_postcomposition.
-      apply skewmonoidal_precat_rho_lambda_eq.
-    }
-    apply id_left.
-  - etrans.
-    {
-      rewrite <- assoc.
-      apply cancel_precomposition.
-      apply (nat_trans_ax λ_).
-    }
-    etrans;[apply assoc|].
-    apply cancel_postcomposition.
-    unfold functor_fix_snd_arg_ob.
-    apply skewmonoidal_precat_alpha_lambda_eq.
-Qed.
-
-Definition IModule_left_unitor x : IModule_mor (IModule_tensor (IModule_I) x) x :=
-  (λ_ x ,, IModule_left_unitor_isIModule_mor x).
-
-Lemma IModule_associator_isIModule_mor x y z :
-  is_IModule_mor (IModule_tensor (IModule_tensor x y) z) (IModule_tensor x (IModule_tensor y z)) (α ((x, y), z)).
-Proof.
-  red; cbn; split.
-  - rewrite <- assoc.
-    eapply (pathscomp0 (b := _ · ((ρ I #⊗ id _) · (((IMod_unit x #⊗ IMod_unit y) #⊗ (IMod_unit z)) ·
-                                            α ((_ , _),_))))).
-    {
-      apply cancel_precomposition.
-      rewrite assoc.
-      apply cancel_postcomposition.
-      etrans;[| apply functor_comp].
-      apply maponpaths.
-      apply dirprod_paths.
-      + apply idpath.
-      + apply pathsinv0, id_left.
-    }
-    etrans.
-    {
-      apply cancel_precomposition.
-      apply cancel_precomposition.
-      apply (nat_trans_ax α _ _ (( IMod_unit x #, IMod_unit y) #, IMod_unit z) ).
-    }
-    apply pathsinv0.
-    eapply (pathscomp0 (b := _ · ((id _ #⊗ ρ I ) · ((IMod_unit x #⊗ (IMod_unit y #⊗ IMod_unit z))
-                                             )))).
-    {
-      apply cancel_precomposition.
-      etrans;[| apply functor_comp].
-      eapply (maponpaths (fun f => # tensor (f #, _)) ).
-      apply pathsinv0,id_left.
-    }
-    repeat rewrite assoc.
-    apply cancel_postcomposition.
-    etrans;[|apply assoc].
-    apply pathsinv0.
-    etrans;[| apply cancel_precomposition, (skewmonoidal_precat_rho_alpha_eq Mon_V)].
-    repeat rewrite assoc.
-    apply cancel_postcomposition.
-    apply pathsinv0.
-    apply (nat_trans_ax ρ).
-  - etrans; revgoals.
-    {
-      etrans; revgoals.
-      {
-        apply cancel_precomposition.
-        apply cancel_precomposition.
-        apply (pathscomp0 (b := (id x #⊗ α ((_ , _) , _)) · (id x #⊗ (id y #⊗ IMod_action z)))); revgoals.
-        {
-          etrans.
-          {
-            apply pathsinv0.
-            apply functor_comp.
-          }
-          apply maponpaths.
-          apply dirprod_paths.
-          + apply id_left.
-          + apply idpath.
-        }
-        apply idpath.
-      }
-      repeat rewrite assoc.
-      apply cancel_postcomposition.
-      apply  (skewmonoidal_precat_pentagon_eq Mon_V x y z I).
-    }
-    repeat rewrite <- assoc.
-    apply cancel_precomposition.
-    etrans;[| apply (nat_trans_ax α _ _ ((id x #, id y) #, IMod_action z))].
-    apply cancel_postcomposition.
-    apply (maponpaths (# tensor)).
-    apply dirprod_paths.
-    + apply pathsinv0, (functor_id tensor (x , y)).
-    + apply idpath.
-Qed.
-Definition IModule_associator x y z : IModule_mor (IModule_tensor (IModule_tensor x y) z)
-                                                  (IModule_tensor x (IModule_tensor y z)) :=
-  (α ((x , y) , z)) ,, IModule_associator_isIModule_mor x y z.
-(* Notation "X ⊗ Y" := ( *)
-(* (@functor_on_morphisms *)
-(*        (precategory_ob_mor_from_precategory_data *)
-(*           (precategory_data_from_precategory (precategory_binproduct (@pr1 _ _ Mon_V) (@pr1 _ _ Mon_V)))) *)
-(*        (precategory_ob_mor_from_precategory_data (precategory_data_from_precategory (@pr1 _ _ Mon_V))) *)
-(*        (functor_data_from_functor *)
-(*           (precategory_data_from_precategory (precategory_binproduct (@pr1 _ _ Mon_V) (@pr1 _ _ Mon_V))) *)
-(*           (precategory_data_from_precategory (@pr1 _ _ Mon_V)) tensor) *)
-(*        _ *)
-(*        _ *)
-(*        (@tpair *)
-(*           (@precategory_morphisms (precategory_ob_mor_from_precategory_data (precategory_data_from_precategory V)) *)
-(*              (IMod_carrier _) (IMod_carrier _)) *)
-(*           (fun *)
-(*              _ : @precategory_morphisms *)
-(*                    (precategory_ob_mor_from_precategory_data (precategory_data_from_precategory V))  *)
-(*                    (IMod_carrier _) (IMod_carrier _) => *)
-(*            @pr2 _ _ (precategory_ob_mor_from_precategory_data (precategory_data_from_precategory V)) *)
-(*              (IMod_carrier _) (IMod_carrier _)) (mor_from_IModule_mor _ _ X) (mor_from_IModule_mor _ _ Y)) *)
-(*     (* ((((X : V ⟦ _ , _ ⟧) ,, (Y : V ⟦ _ , _ ⟧)) : _ × _ ) : V ⊠ V ⟦ (_ ,, _), (_ ,,_) ⟧) *) *)
-(*        )). *)
-
-                        (* ((((X : V ⟦ _ , _ ⟧) ,, (Y : V ⟦ _ , _ ⟧)) : _ × _ ) : V ⊠ V ⟦ (_ ,, _), (_ ,,_) ⟧)). *)
-(* (functor_data_from_functor (precategory_data_from_precategory (@pr1 _ _ Mon_V ⊠ @pr1 _ _ Mon_V)) *)
-(*        (precategory_data_from_precategory (@pr1 _ _ Mon_V)) tensor) *)
 Lemma IModule_tensor_is_IModule_mor {A B C D : IModule_ob}
            (f : IModule_mor A B)(g : IModule_mor C D) : is_IModule_mor (IModule_tensor A C) (IModule_tensor B D)
                                                                        (f #⊗ g).
@@ -412,7 +300,7 @@ Proof.
   - rewrite <- assoc.
     apply cancel_precomposition.
     etrans;[apply pathsinv0,functor_comp|].
-    apply maponpaths.
+    apply (maponpaths (#tensor)).
     apply dirprod_paths; apply IModule_mor_unit_commutes.
   - cbn.
     rewrite <- assoc.
@@ -446,32 +334,171 @@ Definition IModule_tensor_mor {A B C D : IModule_ob}
            (f : IModule_mor A B)(g : IModule_mor C D) : IModule_mor (IModule_tensor A C) (IModule_tensor B D) := _ ,, IModule_tensor_is_IModule_mor f g.
 
 (* first step of definition *)
-Definition IModule_tensor_data (hsC: has_homsets V):
-   functor_data ((IModule hsC)⊠ (IModule hsC))(IModule hsC).
+Definition IModule_tensor_data :
+   functor_data (IMOD ⊠ IMOD) IMOD.
 Proof.
-  set (onobs := fun alg : ((IModule hsC)⊠ (IModule hsC))  => IModule_tensor (pr1 alg)(pr2 alg)).
-  apply (make_functor_data (C' := IModule hsC)  onobs).
+  set (onobs := fun alg : (IMOD ⊠ IMOD )  => IModule_tensor (pr1 alg)(pr2 alg)).
+  apply (make_functor_data (C' := IMOD)  onobs).
   intros alg1 alg2 m.
   simpl in m.
   exact (IModule_tensor_mor (pr1 m) (pr2 m)).
 Defined.
-Lemma IModule_tensor_is_functor (hsC: has_homsets V):
-  is_functor (IModule_tensor_data hsC).
+Lemma IModule_tensor_is_functor :
+  is_functor IModule_tensor_data.
 Proof.
   split.
   - intro alg.
-    apply (IModule_mor_eq hsC).
+    apply (IModule_mor_eq ).
     apply (functor_id tensor).
   - intros a b c f g.
-    apply (IModule_mor_eq hsC).
-    etrans;revgoals.
-    apply (functor_comp tensor).
+    apply (IModule_mor_eq ).
+    (* etrans;revgoals. *)
+    (* apply pathsinv0. *)
+    etrans;[| use (functor_comp tensor)].
     apply idpath.
 Qed.
 
-Definition IModule_tensor_functor (hsC: has_homsets V): functor ((IModule hsC)⊠ (IModule hsC))(IModule hsC) :=
-  make_functor (IModule_tensor_data hsC) (IModule_tensor_is_functor hsC).
+Definition IModule_tensor_functor : functor (IMOD⊠ IMOD)IMOD :=
+  make_functor (IModule_tensor_data ) (IModule_tensor_is_functor ).
+
+Notation tensorM := IModule_tensor_functor.
+Notation IM := (IModule_I : IMOD).
+Notation "X ⊗ Y" := (tensorM ((X : IMOD), (Y : IMOD)))  : module_scope.
+Notation "f #⊗ g" := (# (tensorM) (f #, g)) : module_scope.
+Delimit Scope module_scope with M.
+
+(* left unitor for IModules *)
+
+Lemma IModule_left_unitor_isIModule_mor (x : IModule_ob) :
+   is_IModule_mor (IModule_tensor IModule_I x) x ( λ_ x).
+Proof.
+  red; cbn; split.
+  - etrans.
+    {
+      rewrite <- assoc.
+      apply cancel_precomposition.
+      apply (nat_trans_ax λ_).
+    }
+    etrans;[apply assoc|].
+    etrans.
+    {
+      apply cancel_postcomposition.
+      apply skewmonoidal_precat_rho_lambda_eq.
+    }
+    apply id_left.
+  - etrans.
+    {
+      rewrite <- assoc.
+      apply cancel_precomposition.
+      apply (nat_trans_ax λ_).
+    }
+    etrans;[apply assoc|].
+    apply cancel_postcomposition.
+    unfold functor_fix_snd_arg_ob.
+    apply skewmonoidal_precat_alpha_lambda_eq.
+Qed.
+
+Definition IModule_left_unitor_data x : IModule_mor (IModule_tensor (IModule_I) x) x :=
+  (λ_ x ,, IModule_left_unitor_isIModule_mor x).
+
+Lemma IModule_left_unitor_is_nat_trans :
+  is_nat_trans (I_pretensor tensorM (IModule_I : IMOD)) (functor_identity IMOD) IModule_left_unitor_data.
+Proof.
+  intros x y f.
+  apply IModule_mor_eq.
+  apply (nat_trans_ax λ_).
+Qed.
+
+Definition IModule_left_unitor : left_unitor tensorM IM := make_nat_trans _ _ _ IModule_left_unitor_is_nat_trans.
+
+(* the category of IModules do not have right unitor for IModules *)
+
+
+(* associator *)
+Lemma IModule_associator_isIModule_mor x y z :
+  is_IModule_mor (IModule_tensor (IModule_tensor x y) z) (IModule_tensor x (IModule_tensor y z)) (α ((x, y), z)).
+Proof.
+  red; cbn; split.
+  - rewrite <- assoc.
+    eapply (pathscomp0 (b := _ · ((ρ I #⊗ id _) · (((IMod_unit x #⊗ IMod_unit y) #⊗ (IMod_unit z)) ·
+                                            α ((_ , _),_))))).
+    {
+      apply cancel_precomposition.
+      rewrite assoc.
+      apply cancel_postcomposition.
+      etrans;[| apply functor_comp].
+      apply (maponpaths (fun z => _ #⊗ z)).
+      apply pathsinv0, id_left.
+    }
+    etrans.
+    {
+      apply cancel_precomposition.
+      apply cancel_precomposition.
+      apply (nat_trans_ax α _ _ (( IMod_unit x #, IMod_unit y) #, IMod_unit z) ).
+    }
+    apply pathsinv0.
+    eapply (pathscomp0 (b := _ · ((id _ #⊗ ρ I ) · ((IMod_unit x #⊗ (IMod_unit y #⊗ IMod_unit z))
+                                             )))).
+    {
+      apply cancel_precomposition.
+      etrans;[| apply functor_comp].
+      eapply (maponpaths (fun f => # tensor (f #, _)) ).
+      apply pathsinv0,id_left.
+    }
+    repeat rewrite assoc.
+    apply cancel_postcomposition.
+    etrans;[|apply assoc].
+    apply pathsinv0.
+    etrans;[| apply cancel_precomposition, (skewmonoidal_precat_rho_alpha_eq V)].
+    repeat rewrite assoc.
+    apply cancel_postcomposition.
+    apply pathsinv0.
+    apply (nat_trans_ax ρ).
+  - etrans; revgoals.
+    {
+      etrans; revgoals.
+      {
+        apply cancel_precomposition.
+        apply cancel_precomposition.
+        apply (pathscomp0 (b := (id x #⊗ α ((_ , _) , _)) · (id x #⊗ (id y #⊗ IMod_action z)))); revgoals.
+        {
+          etrans.
+          {
+            apply pathsinv0.
+            apply functor_comp.
+          }
+          apply (maponpaths (fun z => z #⊗ _)).
+          apply id_left.
+        }
+        apply idpath.
+      }
+      repeat rewrite assoc.
+      apply cancel_postcomposition.
+      apply  (skewmonoidal_precat_pentagon_eq V x y z I).
+    }
+    repeat rewrite <- assoc.
+    apply cancel_precomposition.
+    etrans;[| apply (nat_trans_ax α _ _ ((id x #, id y) #, IMod_action z))].
+    apply cancel_postcomposition.
+    apply (maponpaths (# tensor)).
+    apply dirprod_paths.
+    + apply pathsinv0, (functor_id tensor (x , y)).
+    + apply idpath.
+Qed.
+Definition IModule_associator_data x y z : IModule_mor (IModule_tensor (IModule_tensor x y) z)
+                                                  (IModule_tensor x (IModule_tensor y z)) :=
+  (α ((x , y) , z)) ,, IModule_associator_isIModule_mor x y z.
+
+Lemma IModule_associator_is_nat_trans : is_nat_trans (assoc_left tensorM) (assoc_right tensorM)
+                                                     (fun x => IModule_associator_data (pr1 (pr1 x)) (pr2 (pr1 x)) (pr2 x)).
+Proof.
+  intros x y f.
+  apply IModule_mor_eq.
+  apply (nat_trans_ax α _ _ ((_ #, _) #, _)).
+Qed.
+
+Definition IModule_associator : associator tensorM := make_nat_trans _ _ _ IModule_associator_is_nat_trans.
+
+
 
 End IModule_Definition.
-
-Notation IModule := precategory_IModule.
