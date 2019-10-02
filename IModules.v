@@ -13,16 +13,15 @@ Require Import SkewMonoidalCategories.
 
 Local Open Scope cat.
 
-
 (* Definition of a retract *)
 Definition retract {C : precategory}{x y : C}(f : C ⟦ x , y ⟧) : UU :=
-  ∑ (g : C ⟦ y , x ⟧), f · g = id _.
+  ∑ (g : C ⟦ y , x ⟧), f · g = identity _.
 
 Coercion morphism_from_rectract {C : precategory}{x y : C}{f : C ⟦ x , y ⟧}(r : retract f) : C ⟦ y , x ⟧ :=
   pr1 r.
 
 Definition retract_isRetract {C : precategory}{x y : C}{f : C ⟦ x , y ⟧}
-           (r : retract f) : f · r = id _ := pr2 r.
+           (r : retract f) : f · r = identity _ := pr2 r.
 
 (** ** Category of algebras of an endofunctor *)
 
@@ -91,7 +90,7 @@ Definition IMod_action (X : IModule_ob) : retract (ρ X) :=  (pr2 (pr2 X)).
     >>
  *)
 Definition is_IModule_mor (X Y : IModule_ob) (f : IMod_carrier X --> IMod_carrier Y) : UU
-  := IMod_unit X · f = IMod_unit Y × IMod_action X · f =  (f #⊗ id _) · IMod_action Y.
+  := IMod_unit X · f = IMod_unit Y × IMod_action X · f =  (f #⊗ identity _) · IMod_action Y.
 
 Lemma isaprop_is_IModule_mor {X Y : IModule_ob} (f : IMod_carrier X --> IMod_carrier Y)
   : isaprop (is_IModule_mor X Y f).
@@ -128,12 +127,12 @@ Proof.
 Qed.
 
 Lemma IModule_mor_action_commutes (X Y : IModule_ob) (f : IModule_mor X Y)
-  : IMod_action X · f =  (f #⊗ id _) · IMod_action Y.
+  : IMod_action X · f =  (f #⊗ identity _) · IMod_action Y.
 Proof.
   exact (pr2 (pr2 f)).
 Qed.
 
-Lemma is_IModule_mor_id X : is_IModule_mor X X (id X).
+Lemma is_IModule_mor_id X : is_IModule_mor X X (identity X).
 Proof.
   split.
   - apply id_right.
@@ -144,7 +143,7 @@ Proof.
     eapply (functor_id tensor (_ ,, _) ).
 Qed.
 
-Definition IModule_mor_id (X : IModule_ob) : IModule_mor X X := id _ ,, is_IModule_mor_id X.
+Definition IModule_mor_id (X : IModule_ob) : IModule_mor X X := identity _ ,, is_IModule_mor_id X.
 
 Lemma is_IModule_mor_comp (X Y Z : IModule_ob) (f : IModule_mor X Y) (g : IModule_mor Y Z)  :
   is_IModule_mor X Z (f · g).
@@ -257,11 +256,11 @@ The category of I-modules is skew monoidal
 
 (* I is a I-module *)
 Definition IModule_I : precategory_IMod_ob_mor :=
-  (I ,, (id I ,, (λ_ I ,, skewmonoidal_precat_rho_lambda_eq _))).
+  (I ,, (identity I ,, (λ_ I ,, skewmonoidal_precat_rho_lambda_eq _))).
 
 (* On utilise que l'action de B *)
 Lemma IMod_tensor_isRetract (A : IModule_ob)(B : IModule_ob)
-   : ρ (A ⊗ B) · (α ((A, B), I) · # tensor (id A #, IMod_action B)) = id (A ⊗ B).
+   : ρ (A ⊗ B) · (α ((A, B), I) · # tensor (identity A #, IMod_action B)) = identity (A ⊗ B).
 Proof.
     rewrite assoc.
     etrans.
@@ -284,7 +283,7 @@ Proof.
     + apply retract_isRetract.
 Qed.
 Definition IMod_tensor_retract(A : IModule_ob) (B : IModule_ob) : retract (ρ (A ⊗ B)) :=
-  (α ((A , B) , I) · (id A #⊗ IMod_action B)) ,, IMod_tensor_isRetract A B.
+  (α ((A , B) , I) · (identity A #⊗ IMod_action B)) ,, IMod_tensor_isRetract A B.
 
 (* The tensor product of I-modules is a I-module *)
 Definition IModule_tensor (A : IModule_ob) (B : IModule_ob) : IModule_ob :=
@@ -308,7 +307,7 @@ Proof.
     {
       apply cancel_precomposition.
       etrans;[apply pathsinv0,functor_comp|].
-      eapply (maponpaths (# tensor) (t2 := (f · id _ #, _))).
+      eapply (maponpaths (# tensor) (t2 := (f · identity _ #, _))).
       apply dirprod_paths.
       + cbn.
         rewrite id_right , id_left.
@@ -321,7 +320,7 @@ Proof.
     {
       rewrite assoc.
       apply cancel_postcomposition.
-      apply (nat_trans_ax α _ _ ((f #, g) #, id _)).
+      apply (nat_trans_ax α _ _ ((f #, g) #, identity _)).
     }
     apply pathsinv0.
     etrans;[|apply assoc].
@@ -420,7 +419,7 @@ Lemma IModule_associator_isIModule_mor x y z :
 Proof.
   red; cbn; split.
   - rewrite <- assoc.
-    eapply (pathscomp0 (b := _ · ((ρ I #⊗ id _) · (((IMod_unit x #⊗ IMod_unit y) #⊗ (IMod_unit z)) ·
+    eapply (pathscomp0 (b := _ · ((ρ I #⊗ identity _) · (((IMod_unit x #⊗ IMod_unit y) #⊗ (IMod_unit z)) ·
                                             α ((_ , _),_))))).
     {
       apply cancel_precomposition.
@@ -437,7 +436,7 @@ Proof.
       apply (nat_trans_ax α _ _ (( IMod_unit x #, IMod_unit y) #, IMod_unit z) ).
     }
     apply pathsinv0.
-    eapply (pathscomp0 (b := _ · ((id _ #⊗ ρ I ) · ((IMod_unit x #⊗ (IMod_unit y #⊗ IMod_unit z))
+    eapply (pathscomp0 (b := _ · ((identity _ #⊗ ρ I ) · ((IMod_unit x #⊗ (IMod_unit y #⊗ IMod_unit z))
                                              )))).
     {
       apply cancel_precomposition.
@@ -460,7 +459,7 @@ Proof.
       {
         apply cancel_precomposition.
         apply cancel_precomposition.
-        apply (pathscomp0 (b := (id x #⊗ α ((_ , _) , _)) · (id x #⊗ (id y #⊗ IMod_action z)))); revgoals.
+        apply (pathscomp0 (b := (identity x #⊗ α ((_ , _) , _)) · (identity x #⊗ (identity y #⊗ IMod_action z)))); revgoals.
         {
           etrans.
           {
@@ -478,7 +477,7 @@ Proof.
     }
     repeat rewrite <- assoc.
     apply cancel_precomposition.
-    etrans;[| apply (nat_trans_ax α _ _ ((id x #, id y) #, IMod_action z))].
+    etrans;[| apply (nat_trans_ax α _ _ ((identity x #, identity y) #, IMod_action z))].
     apply cancel_postcomposition.
     apply (maponpaths (# tensor)).
     apply dirprod_paths.

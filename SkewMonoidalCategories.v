@@ -16,7 +16,7 @@ Require Import UniMath.CategoryTheory.whiskering.
 
 Local Open Scope cat.
 
-Notation "'id' X" := (identity X) (at level 30).
+Local Notation "'id' X" := (identity X) (at level 30).
 
 Notation "C ⊠ D" := (precategory_binproduct C D) (at level 38).
 Notation "( c , d )" := (make_precatbinprod c d).
@@ -179,7 +179,11 @@ Notation ρ' := skewmonoidal_precat_right_unitor.
 Definition skewmonoidal_precat_associator : associator tensor := pr1 (pr2 (pr2 (pr2 (pr2 (pr2 M))))).
 Notation α' := skewmonoidal_precat_associator.
 
-Definition skewmonoidal_precat_eq         := pr2 (pr2 (pr2 (pr2 (pr2 (pr2 M))))).
+Definition skewmonoidal_precat_eq :
+         (rho_lambda_eq tensor I λ' ρ') × (triangle_eq tensor I λ' ρ' α') ×
+      (alpha_lambda_eq tensor I λ' ρ' α') × (rho_alpha_eq tensor I λ' ρ' α') ×
+                               (pentagon_eq tensor α')
+  := pr2 (pr2 (pr2 (pr2 (pr2 (pr2 M))))).
 Notation eq := skewmonoidal_precat_eq.
 
 Definition skewmonoidal_precat_rho_lambda_eq :  rho_lambda_eq tensor I λ' ρ' := pr1 eq.
@@ -187,6 +191,7 @@ Definition skewmonoidal_precat_triangle_eq : triangle_eq tensor I λ' ρ' α' :=
 Definition skewmonoidal_precat_alpha_lambda_eq : alpha_lambda_eq tensor I λ' ρ' α' := pr1 (pr2 (pr2 eq)).
 Definition skewmonoidal_precat_rho_alpha_eq : rho_alpha_eq tensor I λ' ρ' α' := pr1 (pr2 (pr2 (pr2 eq))).
 Definition skewmonoidal_precat_pentagon_eq : pentagon_eq tensor α' :=  (pr2 (pr2 (pr2 (pr2 eq)))).
+
 
 (* Definition skewmonoidal_precat_rho_lambda_eq : ρ' I · λ' I = id (I : pr1 M). := pr2 (pr2 (pr2 (pr2 (pr2 (pr2 M))))). *)
 

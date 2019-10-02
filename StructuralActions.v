@@ -16,6 +16,7 @@ Require Import IModules.
 (* Require Import SkewMonoidalFunctors. *)
 
 Local Open Scope cat.
+Local Notation "'id' X" := (identity X) (at level 30).
 
 Section A.
 
