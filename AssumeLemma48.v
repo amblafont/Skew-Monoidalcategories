@@ -522,6 +522,42 @@ Proof.
   apply A_Galg_mor_eq_aux.
 Qed.
 
+(* Definition A_Galg_mor_eq (P : M) {C : V} (c : V ⟦ I ⊗ v P + F C, C ⟧) u v : *)
+(*   (BinCoproductOfArrows  _ (tensor_left_bp I (F A) _) (bc _ _) *)
+(*                         (identity _) *)
+(*                         (stF_pw A P · # F u) · c *)
+(*   = *)
+(*   (A_Galg #⊗ identity _) · u) -> *)
+(*   (BinCoproductOfArrows  _ (tensor_left_bp I (F A) _) (bc _ _) *)
+(*                         (identity _) *)
+(*                         (stF_pw A P · # F v) · c *)
+(*   = *)
+(*   (A_Galg #⊗ identity _) · v) -> *)
+(*   u = v. T
+
+
+TODO: réfléchir si cette version n'est pas mieux également pour A_Galg_unique
+ *)
+Definition A_Galg_mor_eq (P : M) {C : V} (c1 : V ⟦ v P , C ⟧)(c2 : V ⟦ F C , C ⟧) u v :
+  (BinCoproductArrow  _ (tensor_left_bp I (F A) _) 
+                        (λ_ _ · c1) 
+                        (stF_pw A P · # F u · c2)
+  =
+  (A_Galg #⊗ identity _) · u) ->
+  (BinCoproductArrow  _ (tensor_left_bp I (F A) _) 
+                        (λ_ _ · c1)
+                        (stF_pw A P · # F v · c2)
+  =
+  (A_Galg #⊗ identity _) · v) ->
+  u = v.
+Proof.
+Admitted.
+(*   intros hu hv. *)
+(*   etrans;[apply A_Galg_mor_unique, hu|]. *)
+(*   apply pathsinv0. *)
+(*   apply A_Galg_mor_unique, hv. *)
+(* Qed. *)
+
 
 (* TODO: utiliser ca pour prouver l'associativité et le fait que m est un morphisme
 de module
@@ -1183,7 +1219,326 @@ Proof.
     apply (functor_id tensor).
 Qed.
 
+Definition retract_from_partial_monoid {X : V}{eX : V ⟦ I , X⟧}{mX : V ⟦X ⊗ X , X⟧}
+           (right_unitX : ρ X · identity X #⊗ eX · mX = identity X) :
+  retract (ρ X) := ((identity X #⊗ eX · mX) ,, pathscomp0 ( (assoc (ρ X) _ mX)) right_unitX).
 
+Definition IMod_from_partial_monoid {X : V}{eX : V ⟦ I , X⟧}{mX : V ⟦X ⊗ X , X⟧}
+           (right_unitX : ρ X · identity X #⊗ eX · mX = identity X) : M :=
+   (X ,, eX ,, retract_from_partial_monoid right_unitX).
+
+(* Equation that a F-monoid X should satisfy *)
+Definition Fmonoid_equation {X : V} (eX : V ⟦ I , X⟧)(mX : V ⟦X ⊗ X , X⟧) (algX : V ⟦ F X , X⟧)
+           (rX : retract (ρ X))
+           (* (XM :=  *)
+           (* (right_unitX : ρ X · identity X #⊗ eX · mX = identity X) *)
+           (* (XM := IMod_from_partial_monoid right_unitX) *)
+  : UU :=  stF_pw X (X ,, eX ,, rX) · # F mX · algX = algX #⊗ identity X · mX.
+
+Lemma Fmonoid_equation_Galg {X : V} (eX : V ⟦ I , X⟧)(mX : V ⟦X ⊗ X , X⟧) (algX : V ⟦ F X , X⟧)
+           (rX : retract (ρ X))
+           (left_unitX:   eX #⊗ identity X · mX = λ_ X)
+           (eqx : Fmonoid_equation eX mX algX rX)
+           (* (right_unitX : ρ X · identity X #⊗ eX · mX = identity X) *)
+           (* (XM :=  *)
+           (* (right_unitX : ρ X · identity X #⊗ eX · mX = identity X) *)
+           (* (XM := IMod_from_partial_monoid right_unitX) *)
+    :  BinCoproductArrow _ (tensor_left_bp_gen _ _) 
+                             (λ_ X)
+             (stF_pw X (X ,, eX ,, rX) · # F mX · algX)  = BinCoproductArrow _ (bc _ _) eX algX #⊗ identity X · mX.
+Proof.
+  apply pathsinv0.
+  etrans.
+  {
+    etrans.
+    {
+      apply cancel_postcomposition.
+      apply (BinCoproductArrow_tensor).
+    }
+    apply (postcompWithBinCoproductArrow _ (tensor_left_bp_gen _ _)).
+  }
+  apply map_on_two_paths.
+  - exact left_unitX.
+  - exact (!eqx).
+    Qed.
+
+(* Lemma  *)
+(* (IMod_from_partial_monoid e_right_unit') *)
+Lemma A_Fmonoid_eq : Fmonoid_equation e m A_Falg A_action.
+  (* e_right_unit'. *)
+Proof.
+  etrans; revgoals.
+  {
+    apply pathsinv0.
+    eapply usual_eq2.
+    exact (! m_ax2).
+  }
+  apply idpath.
+Qed.
+
+
+Definition X_as_Galg
+           {X : V} (eX : V ⟦ I , X⟧) (algX : V ⟦ F X , X⟧) : algebra_ob G.
+  eapply tpair.
+  exact (BinCoproductArrow _ (bc _ _) eX algX).
+Defined.
+(* initial morphism *)
+Definition initial_X {X : V} (eX : V ⟦ I , X⟧) (algX : V ⟦ F X , X⟧) : V ⟦ A , X ⟧.
+  change X with (carrier (X_as_Galg eX algX)).
+  apply (InitialArrow Ai).
+Defined.
+
+Lemma unitX_is_IModule_mor 
+    {X : V} (eX : V ⟦ I , X⟧) (mX : V ⟦X ⊗ X , X⟧)(algX : V ⟦ F X , X⟧) (i := initial_X eX algX)
+    (right_unitX : ρ X · identity X #⊗ eX · mX = identity X  )
+    (left_unitX:   eX #⊗ identity X · mX = λ_ X)
+      (* (rX := (retract_from_partial_monoid  right_unitX))   *)
+    (XM := IMod_from_partial_monoid right_unitX) :
+  is_IModule_mor  _ IM XM eX.
+Proof.
+  split.
+  - apply id_left.
+  - cbn.
+    apply pathsinv0.
+    etrans.
+    {
+      etrans;[apply assoc|].
+      apply cancel_postcomposition.
+      apply binprod_functor_swap_morphisms.
+    }
+    etrans;[|apply  (nat_trans_ax λ_)].
+    rewrite <- assoc.
+    apply cancel_precomposition.
+    exact left_unitX.
+Qed.
+
+Definition eXM  
+    {X : V} (eX : V ⟦ I , X⟧) (mX : V ⟦X ⊗ X , X⟧)(algX : V ⟦ F X , X⟧) (i := initial_X eX algX)
+    (right_unitX : ρ X · identity X #⊗ eX · mX = identity X  )
+    (left_unitX:   eX #⊗ identity X · mX = λ_ X)
+      (* (rX := (retract_from_partial_monoid  right_unitX))   *)
+    (XM := IMod_from_partial_monoid right_unitX) :
+  IModule_mor  _ IM XM := eX ,, unitX_is_IModule_mor eX mX algX right_unitX left_unitX.
+
+
+(* it commutes with unit and algebras: ok
+And then uniqueness is trivial
+ *)
+Lemma initial_X_Galg  
+      {X : V} (eX : V ⟦ I , X⟧) (algX : V ⟦ F X , X⟧) (i := initial_X eX algX) :
+  A_Galg · i = # G i · (BinCoproductArrow _ (bc _ _) eX algX).
+Proof.
+  eapply (algebra_mor_commutes G _ (X_as_Galg eX algX) (InitialArrow Ai _ )).
+Qed.
+Lemma initial_X_Falg  
+      {X : V} (eX : V ⟦ I , X⟧) (algX : V ⟦ F X , X⟧) (i := initial_X eX algX) :
+  A_Falg · i = # F i · algX.
+Proof.
+  etrans.
+  {
+    etrans;[apply pathsinv0, assoc|].
+    apply cancel_precomposition.
+    apply initial_X_Galg.
+  }
+  etrans.
+  {
+    apply cancel_precomposition.
+    apply precompWithBinCoproductArrow.
+  }
+  eapply BinCoproductIn2Commutes.
+Qed.
+
+Lemma initial_X_unit
+      {X : V} (eX : V ⟦ I , X⟧) (algX : V ⟦ F X , X⟧) (i := initial_X eX algX) :
+  e · i = eX.
+Proof.
+  etrans.
+  {
+    etrans;[apply pathsinv0, assoc|].
+    apply cancel_precomposition.
+    apply initial_X_Galg.
+  }
+  etrans.
+  {
+    apply cancel_precomposition.
+    apply precompWithBinCoproductArrow.
+  }
+  etrans;[eapply BinCoproductIn1Commutes|].
+  cbn.
+  apply id_left.
+Qed.
+
+Lemma useful_lemma_for_i 
+      {P : M}
+    {X : V} (eX : V ⟦ I , X⟧) (mX : V ⟦X ⊗ X , X⟧)(algX : V ⟦ F X , X⟧) (i := initial_X eX algX)
+    (right_unitX : ρ X · identity X #⊗ eX · mX = identity X  )
+    (left_unitX:   eX #⊗ identity X · mX = λ_ X)
+      (rX := (retract_from_partial_monoid  right_unitX))  
+      (XM := IMod_from_partial_monoid right_unitX)
+      {j : V ⟦ v P , X ⟧} (j_is_IModule_mor : is_IModule_mor _ P XM j)
+      (Xeq :   Fmonoid_equation eX mX algX rX)
+
+      (* (left_unitX:   eX #⊗ identity X · mX = λ_ X) *)
+       :
+   A_Galg #⊗ identity (v P) · i #⊗ j · mX =
+   (* la aussi il y a un choix *)
+   BinCoproductArrow  _ (tensor_left_bp _ _ _)  (λ_ (v  P) · j)
+          (* ici il y a un choix *)
+                      (stF_pw _ _ · (# F (i #⊗ j))  · # F mX · algX).
+                      (* ((# F i #⊗ j) · stF_pw X (X ,, eX ,, rX) · # F mX · algX). *)
+                      (* ((# F i #⊗ j) · algX #⊗ identity _ · mX). *)
+                      (* ((# F i · algX) #⊗ j · mX). *)
+Proof.
+  etrans.
+  {
+    apply cancel_postcomposition.
+    etrans.
+    {
+      apply pathsinv0,(functor_comp tensor).
+    }
+    cbn -[A_Galg i].
+    rewrite id_left.
+    unfold i.
+    rewrite initial_X_Galg.
+    fold i.
+    eassert( h  := (functor_comp tensor (# G i #, j)(BinCoproductArrow _ _ eX algX #, identity _))).
+    etrans;[|exact h].
+    apply maponpaths.
+    apply dirprod_paths.
+    * apply idpath.
+    * cbn.
+      apply pathsinv0, id_right.
+  }
+  etrans.
+  {
+    etrans;[apply pathsinv0, assoc|].
+    apply cancel_precomposition.
+    apply pathsinv0.
+    use Fmonoid_equation_Galg.
+    * eapply retract_from_partial_monoid.
+      exact right_unitX.
+    * exact left_unitX.
+    * exact Xeq.
+  }
+  etrans.
+  {
+    apply cancel_postcomposition.
+    apply BinCoproductOfArrows_tensor.
+  }
+  etrans.
+  {
+    apply (precompWithBinCoproductArrow _ (tensor_left_bp_gen _ _)(tensor_left_bp_gen _ _)).
+  }
+  apply map_on_two_paths.
+  - cbn -[i].
+    apply (nat_trans_ax λ_).
+  - cbn -[i].
+    repeat rewrite assoc.
+    apply cancel_postcomposition.
+    apply cancel_postcomposition.
+    apply (nat_trans_ax stF_nat _ _ (i #, (j ,, j_is_IModule_mor : M ⟦ _ , XM ⟧))).
+Qed.
+
+Lemma i_isImodule_Mor  
+    {X : V} (eX : V ⟦ I , X⟧) (mX : V ⟦X ⊗ X , X⟧)(algX : V ⟦ F X , X⟧) (i := initial_X eX algX)
+      (left_unitX:   eX #⊗ identity X · mX = λ_ X)
+      (right_unitX : ρ X · identity X #⊗ eX · mX = identity X  )
+      (rX := (retract_from_partial_monoid  right_unitX))
+      (Xeq :   Fmonoid_equation eX mX algX rX)
+      : is_IModule_mor V AM (X ,, eX ,, rX) i.
+Proof.
+  split.
+  - apply  initial_X_unit.
+  - cbn-[A i].
+    use (A_Galg_mor_eq IM eX algX).
+    + etrans;[|rewrite assoc; apply cancel_postcomposition, A_action_ax'].
+      etrans;[|apply pathsinv0, (postcompWithBinCoproductArrow _ (tensor_left_bp _ _ _))].
+      apply map_on_two_paths.
+      * rewrite <- assoc.
+        apply cancel_precomposition.
+        apply pathsinv0.
+        apply initial_X_unit.
+      * repeat rewrite <- assoc.
+        apply cancel_precomposition.
+        rewrite (functor_comp F).
+        rewrite <- assoc.
+        apply cancel_precomposition.
+        apply pathsinv0.
+        apply initial_X_Falg.
+    + apply pathsinv0.
+      etrans.
+      {
+        apply cancel_precomposition.
+        rewrite assoc.
+        apply cancel_postcomposition.
+        apply binprod_functor_combine_morphisms.
+      }
+      rewrite assoc.
+      etrans.
+      {
+        use (useful_lemma_for_i (P := IM) ).
+        * exact right_unitX.
+        * exact left_unitX.
+        * apply (unitX_is_IModule_mor eX mX algX).
+          exact left_unitX.
+        *  exact Xeq.
+      }
+      apply maponpaths.
+      apply cancel_postcomposition.
+      repeat rewrite <- assoc.
+      apply cancel_precomposition.
+      fold i.
+      etrans;[apply pathsinv0,functor_comp|].
+      apply maponpaths.
+      rewrite assoc.
+      apply cancel_postcomposition.
+      apply pathsinv0.
+      apply binprod_functor_combine_morphisms.
+    Qed.
+      (* (eqX : Fmonoid_equation eX mX algX rX) *)
+
+
+(* does it commute with the multiplication ? *)
+Lemma i_mul  {X : V} (eX : V ⟦ I , X⟧) (mX : V ⟦X ⊗ X , X⟧)(algX : V ⟦ F X , X⟧) (i := initial_X eX algX)
+      (left_unitX:   eX #⊗ identity X · mX = λ_ X)
+      (right_unitX : ρ X · identity X #⊗ eX · mX = identity X  )
+      (rX := (retract_from_partial_monoid  right_unitX))
+      (eqX : Fmonoid_equation eX mX algX rX)
+  :
+  i #⊗ i · mX = m · i.
+Proof.
+  use (A_Galg_mor_eq AM i algX); revgoals.
+  - rewrite assoc.
+    etrans;[| apply cancel_postcomposition, m_ax2].
+    apply pathsinv0.
+    etrans;[ apply (postcompWithBinCoproductArrow _ (tensor_left_bp_gen _ _))|].
+    apply map_on_two_paths.
+    + now rewrite id_right.
+    + repeat rewrite <- assoc.
+      apply cancel_precomposition.
+      etrans;[|apply pathsinv0,cancel_postcomposition,functor_comp].
+      rewrite <- assoc.
+      apply cancel_precomposition.
+      apply initial_X_Falg.
+  - apply pathsinv0.
+    rewrite assoc.
+    etrans.
+    {
+      use useful_lemma_for_i.
+      * exact right_unitX.
+      * exact left_unitX.
+      * apply i_isImodule_Mor.
+        -- exact left_unitX.
+        -- exact eqX.
+      * exact eqX.
+    }
+    apply maponpaths.
+    apply cancel_postcomposition.
+    rewrite functor_comp.
+    now rewrite assoc.
+Qed.
+
+                        (* TODO : verifier que les combine morphismes étaient vraiment utiles et les swap aussi !! *)
 
 
 End A.
