@@ -1,7 +1,7 @@
 (**
   Skew Monoidal categories
 
-  Based on Monoidal categories
+  (adapted from the definition of Monoidal categories in UniMath)
 
 *)
 
@@ -173,6 +173,7 @@ Notation I := skewmonoidal_precat_unit.
 Definition skewmonoidal_precat_left_unitor : left_unitor tensor I := pr1 (pr2 (pr2 (pr2 M))).
 Notation λ' := skewmonoidal_precat_left_unitor.
 
+
 Definition skewmonoidal_precat_right_unitor : right_unitor tensor I := pr1 (pr2 (pr2 (pr2 (pr2 M)))).
 Notation ρ' := skewmonoidal_precat_right_unitor.
 
@@ -192,8 +193,20 @@ Definition skewmonoidal_precat_alpha_lambda_eq : alpha_lambda_eq tensor I λ' ρ
 Definition skewmonoidal_precat_rho_alpha_eq : rho_alpha_eq tensor I λ' ρ' α' := pr1 (pr2 (pr2 (pr2 eq))).
 Definition skewmonoidal_precat_pentagon_eq : pentagon_eq tensor α' :=  (pr2 (pr2 (pr2 (pr2 eq)))).
 
+Notation "f #⊗ g" := (#tensor (f #, g)) (at level 31).
 
-(* Definition skewmonoidal_precat_rho_lambda_eq : ρ' I · λ' I = id (I : pr1 M). := pr2 (pr2 (pr2 (pr2 (pr2 (pr2 M))))). *)
+Lemma I_mult_laws : α' ((I,, I),, I) · identity I #⊗ λ' I · λ' I = λ' I #⊗ identity I · λ' I.
+Proof.
+   etrans.
+    {
+      etrans;[apply pathsinv0,assoc|].
+      apply cancel_precomposition.
+      apply (nat_trans_ax λ').
+    }
+    rewrite assoc.
+    apply cancel_postcomposition.
+    apply skewmonoidal_precat_alpha_lambda_eq.
+Qed.
 
 End Skewmonoidal_precat_Accessors.
 

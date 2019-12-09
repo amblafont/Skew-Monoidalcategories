@@ -17,3 +17,6 @@ in UniMath).
 5. [`Complements.v`](Complements.v)
 6. [`AssumeLemma48.v`](AssumeLemma48.v): construction of an initial susbtitution
 skew-monoid.
+
+Questio: est ce que toute catégorie skew monoidale est équivalente à une catégorie de foncteurs ?
+avec adjonctions ?
