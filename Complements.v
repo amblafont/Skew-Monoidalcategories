@@ -116,13 +116,13 @@ Qed.
 
 (* some technical lemma *)
 Section mapinitialdiag.
-  Lemma map_initDiagram_eq {C D : precategory}(hsD : has_homsets D) (F : C ⟶ D) :
-      eq_diag (C := D ,, hsD) (mapdiagram F initial.initDiagram) initial.initDiagram.
-  Proof.
-    use tpair.
-    - use empty_rect.
-    - use empty_rect.
-  Defined.
+  (* Lemma map_initDiagram_eq {C D : precategory}(hsD : has_homsets D) (F : C ⟶ D) : *)
+  (*     eq_diag (C := D ,, hsD) (mapdiagram F initial.initDiagram) initial.initDiagram. *)
+  (* Proof. *)
+  (*   use tpair. *)
+  (*   - use empty_rect. *)
+  (*   - use empty_rect. *)
+  (* Defined. *)
 End mapinitialdiag.
 
 (** ** A pair of functors (F,G) : A  -> C * D is omega cocontinuous if F and G are *)

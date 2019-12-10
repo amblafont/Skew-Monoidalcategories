@@ -9,7 +9,6 @@ Require Import UniMath.CategoryTheory.Core.NaturalTransformations.
 Require Import UniMath.CategoryTheory.Core.Functors.
 Require Import UniMath.CategoryTheory.whiskering.
 Require Import UniMath.CategoryTheory.PrecategoryBinProduct.
-(* Require Import SkewMonoidalFunctors. *)
 
 Require Import UniMath.CategoryTheory.Chains.Chains.
 Require Import UniMath.CategoryTheory.Chains.Adamek.
@@ -20,7 +19,6 @@ Require Import UniMath.CategoryTheory.limits.initial.
 Require Import UniMath.CategoryTheory.limits.graphs.eqdiag.
 Require Import UniMath.CategoryTheory.FunctorAlgebras.
 Require Import UniMath.CategoryTheory.FunctorCategory.
-(* nat_trans_fix_snd_arg *)
 
 Require Import SkewMonoidalCategories.
 Require Import StructuralActions.
@@ -28,7 +26,6 @@ Require Import StructuralStrengths.
 Require Import IModules.
 Require Import Complements.
 Require Import SkewMonoids.
-(* Require Import UniMath.Foundations.NaturalNumbers. *)
 
 Local Open Scope cat.
 
@@ -63,7 +60,8 @@ Open Scope object_scope.
 Notation I :=  (skewmonoidal_precat_unit V).
 Notation tensor := (skewmonoidal_precat_tensor V).
 Notation "X ⊗ Y" := (tensor (X , Y )).
-Let tensor_on_mor {a b c d}(f : V ⟦a , b ⟧)(g : V ⟦ c , d ⟧) : V ⟦ a ⊗ c , b ⊗ d ⟧ := # tensor (f #, g).
+Let tensor_on_mor {a b c d}
+    (f : V ⟦a , b ⟧)(g : V ⟦ c , d ⟧) : V ⟦ a ⊗ c , b ⊗ d ⟧ := # tensor (f #, g).
 Infix "#⊗" := (tensor_on_mor) (at level 31).
 Notation α' :=  ( skewmonoidal_precat_associator V).
 Notation λ'  :=  (skewmonoidal_precat_left_unitor  V).
@@ -77,13 +75,14 @@ Let Vcat : category := make_category V hsV.
 Notation M := (precategory_IModule V hsV).
 Notation tensorM := (IModule_tensor_functor V hsV).
 Notation "X ⊗ Y" := (tensorM ((X : M) , (Y : M)))  : module_scope.
-(* Notation "f #⊗ g" := (# (IModule_tensor_functor _ hsV) (f #, g)) : module_scope. *)
 Delimit Scope module_scope with M.
 
+(** as modules *)
 Let IM := (IModule_I V : M).
 Let λM := (IModule_left_unitor_data V).
 Let αM := (IModule_associator_data V).
-(* V co complete *)
+
+(* V co-complete *)
 Context (Vch : Colims_of_shape nat_graph V).
 Context (O : Initial  V).
 Context (bc : BinCoproducts  V).
@@ -101,27 +100,35 @@ Notation M_V := (forget_IModules _ hsV).
 (* _ ⊗ X is omega cocontinuous *)
 Context (ltensor_cc : forall (X : V) , is_cocont (φ₂ tensor X)).
 
-Local Definition tensor_isInitial {o : V}(Io : isInitial _ o)(X : V) : isInitial _ (o ⊗ X).
-Proof.
-Admitted.
+(* TODO: Move to complements *)
+Definition initCocone {C : precategory} (c : C)(d : diagram initial.empty_graph C)
+  : cocone d c
+  := make_cocone (g := initial.empty_graph) (empty_rect _) (empty_rect _).
 
-(* en fait on s'en fout de la déf *)
-Local Definition O_tensor_X_isInitial (X : V) : isInitial _ (O ⊗ X) := tensor_isInitial (pr2 _) X.
-(*
-  set (h := (limits.graphs.initial.equiv_isInitial1 O (pr2 O))).
-  set (h' := (ltensor_cc X _ _ _ _ h)).
-  eapply (eq_diag_iscolimcocone _ (map_initDiagram_eq hsV _)) in h'.
-  set (h'' := make_ColimCocone _ _ _ h').
-  use make_isInitial.
-  intro b.
-  use make_iscontr.
-  - eapply (colimArrow h'').
-    apply initial.initCocone.
-  - intro f.
-    eapply (colimArrowUnique h'').
-    use empty_rect.
+Lemma eq_diag_map_I  {D : category} (d d' : diagram initial.empty_graph D) :
+  eq_diag (C := D) d d'.
+Proof.
+  use tpair; use empty_rect.
 Defined.
-*)
+
+Local Lemma tensor_isInitial {o : V}(Io : isInitial _ o)(X : V) :
+  isInitial _ (o ⊗ X).
+Proof.
+  transparent assert (h : (initial.Initial V)).
+  {
+    eapply (eq_diag_liftcolimcocone (C := Vcat)).
+    - eapply (eq_diag_map_I (D := Vcat)).
+    - eapply make_ColimCocone.
+      apply initial.equiv_isInitial1 in Io.
+      eapply (ltensor_cc X) in Io.
+      exact Io.
+  }
+  apply initial.equiv_isInitial2.
+  exact (initial.isInitial_Initial h).
+Qed.
+
+
+Local Definition O_tensor_X_isInitial (X : V) : isInitial _ (O ⊗ X) := tensor_isInitial (pr2 _) X.
 
 Local Definition O_tensor_X_Initial (X : V) : Initial V := make_Initial _ (O_tensor_X_isInitial X).
 
@@ -406,9 +413,18 @@ Proof.
   unfold stH_data.
   cbn.
   unfold BinCoproduct_of_functors_ob, pr1_functor,pr2_functor, BinCoproduct_of_functors_mor,stH_data; cbn.
-  (* TODO *)
-Admitted.
-
+  etrans;[apply cancel_postcomposition,BinCoproductOfArrows_tensor|].
+  etrans;[apply (BinCoproductOfArrows_comp' (tensor_left_bp _ _ _) (tensor_left_bp _ _ _)  )|].
+  etrans; revgoals.
+  {
+    apply pathsinv0.
+    apply (BinCoproductOfArrows_comp' (tensor_left_bp _ _ _)  ).
+  }
+  apply map_on_two_paths.
+  - rewrite id_left,id_right.
+    apply idpath.
+  - apply (nat_trans_ax stF_nat _ _ (_ #, _)).
+Qed.
 
 Definition stH : spec_st2 H := make_nat_trans _ _ stH_data stH_is_nat.
 
@@ -482,25 +498,28 @@ Proof.
   apply A_Galg_mor_eq_aux.
 Qed.
 
-Definition A_Galg_mor_coprod_commutes (P : M) {C : V}
+Definition A_Galg_mor_coprod_commutes (P : M) {C : V}  u 
            (c1 : V ⟦ I ⊗ v P , C ⟧)(c2 : V ⟦ F C, C ⟧)
   (c := BinCoproductArrow _ (bc _ _) c1 c2) :
-  BinCoproductArrow  _ (tensor_left_bp I (F A) _) 
+  (BinCoproductArrow  _ (tensor_left_bp I (F A) _) 
                         c1
-                        (stF_pw A P · # F (PInitial_mor A_Galg_PInitial c) · c2)
-  =
-        (A_Galg #⊗ identity _) · PInitial_mor A_Galg_PInitial c.
+                        (stF_pw A P · # F u · c2)
+                        =
+  (BinCoproductOfArrows  _ (tensor_left_bp I (F A) _) (bc _ _)
+                        (identity _)
+                        (stF_pw A P · # F u) · c)).
 Proof.
-  (* etrans;[| apply (PInitial_mor_commutes A_Galg_PInitial)]. *)
-  (* etrans;[| apply (PInitial_mor_commutes A_Galg_PInitial)]. *)
-  etrans;[| apply A_Galg_mor_commutes].
-  etrans;[|apply pathsinv0,postcompWithBinCoproductArrow].
-  rewrite id_left.
-  unfold c.
-  rewrite (BinCoproductIn1Commutes _ _ _ (bc _ _) _ c1 c2).
-  rewrite <- (assoc _ ι₂ _).
-  now rewrite (BinCoproductIn2Commutes _ _ _ (bc _ _) _ c1 c2).
+  etrans; revgoals.
+  apply pathsinv0.
+  apply (postcompWithBinCoproductArrow _ (tensor_left_bp _ _ _)).
+  apply map_on_two_paths.
+  - rewrite id_left.
+    apply pathsinv0, BinCoproductIn1Commutes.
+  - repeat rewrite <- assoc.
+    repeat apply cancel_precomposition.
+    apply pathsinv0, BinCoproductIn2Commutes.
 Qed.
+
 Definition A_Galg_mor_unique (P : M) {C : V} (c : V ⟦ I ⊗ v P + F C, C ⟧) u :
   (BinCoproductOfArrows  _ (tensor_left_bp I (F A) _) (bc _ _)
                         (identity _)
@@ -516,22 +535,23 @@ Proof.
   apply A_Galg_mor_eq_aux.
 Qed.
 
-(* Definition A_Galg_mor_eq (P : M) {C : V} (c : V ⟦ I ⊗ v P + F C, C ⟧) u v : *)
-(*   (BinCoproductOfArrows  _ (tensor_left_bp I (F A) _) (bc _ _) *)
-(*                         (identity _) *)
-(*                         (stF_pw A P · # F u) · c *)
-(*   = *)
-(*   (A_Galg #⊗ identity _) · u) -> *)
-(*   (BinCoproductOfArrows  _ (tensor_left_bp I (F A) _) (bc _ _) *)
-(*                         (identity _) *)
-(*                         (stF_pw A P · # F v) · c *)
-(*   = *)
-(*   (A_Galg #⊗ identity _) · v) -> *)
-(*   u = v. T
+Definition A_Galg_mor_unique' (P : M) {C : V}  u 
+           (c1 : V ⟦ I ⊗ v P , C ⟧)(c2 : V ⟦ F C, C ⟧)
+  (c := BinCoproductArrow _ (bc _ _) c1 c2) :
+  (BinCoproductArrow  _ (tensor_left_bp I (F A) _) 
+                        c1
+                        (stF_pw A P · # F u · c2)
+  =
+        (A_Galg #⊗ identity _) · u) -> u = PInitial_mor A_Galg_PInitial c.
+Proof.
+  intro h.
+  eapply A_Galg_mor_unique.
+  etrans;[|exact h].
+  apply pathsinv0.
+  apply (A_Galg_mor_coprod_commutes P u).
+Qed.
 
 
-TODO: réfléchir si cette version n'est pas mieux également pour A_Galg_unique
- *)
 Definition A_Galg_mor_eq (P : M) {C : V} (c1 : V ⟦ v P , C ⟧)(c2 : V ⟦ F C , C ⟧) u w :
   (BinCoproductArrow  _ (tensor_left_bp I (F A) _) 
                         (λ'  _ · c1) 
@@ -545,12 +565,11 @@ Definition A_Galg_mor_eq (P : M) {C : V} (c1 : V ⟦ v P , C ⟧)(c2 : V ⟦ F C
   (A_Galg #⊗ identity _) · w) ->
   u = w.
 Proof.
-Admitted.
-(*   intros hu hv. *)
-(*   etrans;[apply A_Galg_mor_unique, hu|]. *)
-(*   apply pathsinv0. *)
-(*   apply A_Galg_mor_unique, hv. *)
-(* Qed. *)
+  intros hu hw.
+  etrans; [|apply pathsinv0]; eapply A_Galg_mor_unique'.
+  - exact hu.
+  - exact hw.
+Qed.
 
 
 (* TODO: utiliser ca pour prouver l'associativité et le fait que m est un morphisme
