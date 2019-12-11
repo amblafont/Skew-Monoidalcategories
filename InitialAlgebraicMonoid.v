@@ -1,4 +1,6 @@
 (**
+Construction of an initial F-monoid, for F a strengthened endofunctor
+(in the skew-monoidal setting)
 **)
 
 Require Import UniMath.Foundations.PartD.

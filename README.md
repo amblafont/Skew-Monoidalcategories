@@ -18,8 +18,8 @@ of Fiore-Saville "List object with algebraic structures" (extended version)
 4. [`IModules.v`](IModules.v): category of pointed I-modules
 5. [`StructuralActions.v`](StructuralActions.v) 
 6. [`StructuralStrengths.v`](StructuralStrengths.v)
-7. [`AssumeLemma48.v`](AssumeLemma48.v): construction of an initial susbtitution
-skew-monoid.
+7. [`InitialAlgebraicMonoid.v`](InitialAlgebraicMonoid.v): construction of an 
+initial algebraic skew-monoid.
 
 
 ## Axioms
