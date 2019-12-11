@@ -6,17 +6,26 @@ This was tested with Coq 8.9 and UniMath (commit
 Compilation: make
 
 ## Files
+
+
 by order of dependency:
 
 1. [`SkewMonoidalCategories.v`](SkewMonoidalCategories.v): definitions of
-skew monoidal categories (adapted from the definition of monoidal categories
-in UniMath).
-2. [`IModules.v`](IModules.v): definition of I-modules
-3. [`StructuralActions.v`](StructuralActions.v) 
-4. [`StructuralStrengths.v`](StructuralStrengths.v)
-5. [`Complements.v`](Complements.v)
-6. [`AssumeLemma48.v`](AssumeLemma48.v): construction of an initial susbtitution
+skew monoidal categories.
+2. [`Complements.v`](Complements.v): complements, axiomatization of Theorem 4.7
+of Fiore-Saville "List object with algebraic structures" (extended version)
+3. [`SkewMonoids.v`](SkewMonoids.v)
+4. [`IModules.v`](IModules.v): category of pointed I-modules
+5. [`StructuralActions.v`](StructuralActions.v) 
+6. [`StructuralStrengths.v`](StructuralStrengths.v)
+7. [`AssumeLemma48.v`](AssumeLemma48.v): construction of an initial susbtitution
 skew-monoid.
 
-Questio: est ce que toute catégorie skew monoidale est équivalente à une catégorie de foncteurs ?
-avec adjonctions ?
+
+## Axioms
+
+The formalization relies on the UniMath library.
+
+There is one admitted result in this work: Theorem 4.7 of Fiore-Saville "List 
+object with algebraic structures" (extended version), found in [`Complements.v`](Complements.v).
+

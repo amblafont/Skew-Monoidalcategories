@@ -97,19 +97,10 @@ Notation "'v' X" := (X : IModule _) (at level 3).
 Notation M_V := (forget_IModules _ hsV).
 
 
-(* _ ⊗ X is omega cocontinuous *)
+(** _ ⊗ X is omega cocontinuous *)
 Context (ltensor_cc : forall (X : V) , is_cocont (φ₂ tensor X)).
 
-(* TODO: Move to complements *)
-Definition initCocone {C : precategory} (c : C)(d : diagram initial.empty_graph C)
-  : cocone d c
-  := make_cocone (g := initial.empty_graph) (empty_rect _) (empty_rect _).
 
-Lemma eq_diag_map_I  {D : category} (d d' : diagram initial.empty_graph D) :
-  eq_diag (C := D) d d'.
-Proof.
-  use tpair; use empty_rect.
-Defined.
 
 Local Lemma tensor_isInitial {o : V}(Io : isInitial _ o)(X : V) :
   isInitial _ (o ⊗ X).
@@ -117,7 +108,7 @@ Proof.
   transparent assert (h : (initial.Initial V)).
   {
     eapply (eq_diag_liftcolimcocone (C := Vcat)).
-    - eapply (eq_diag_map_I (D := Vcat)).
+    - eapply (eq_diag_empty_graph (D := Vcat)).
     - eapply make_ColimCocone.
       apply initial.equiv_isInitial1 in Io.
       eapply (ltensor_cc X) in Io.
@@ -440,7 +431,8 @@ Proof.
 Qed.
 
 
-Definition Homega2 (X : V) : is_omega_cocont (φ₁ H X) := is_omega_cocont_fix_fst_arg hsV hsV hsV Homega X.
+Definition Homega2 (X : V) : is_omega_cocont (φ₁ H X) :=
+  is_omega_cocont_fix_fst_arg hsV hsV hsV Homega X.
 
 Definition Gomega : is_omega_cocont G := Homega2 I.
 
@@ -449,10 +441,6 @@ Definition Ai := colimAlgInitial hsV O Gomega (Vch (initChain O G)).
 
 Definition A := alg_carrier _ (InitialObject Ai).
 
-(* prevent cbn from unfolding A *)
-(* Opaque A. *)
-(* Let FHC' : isColimCocone FFchain (F L) Fa := *)
-(*   HF Fchain L (colimCocone CC) (isColimCocone_from_ColimCocone CC). *)
 
 (* The algebra structure *)
 Definition A_Galg : V ⟦ G A , A ⟧ := alg_map _ _.
@@ -475,13 +463,6 @@ Proof.
   now rewrite id_right.
 Qed.
 
-(* Lemma A_Galg_mor_eq_aux' (P : M) {C : V}  (u : V ⟦ A ⊗ v P , C ⟧) : *)
-(*   BinCoproductOfArrows  _ (tensor_left_bp I (F A) _) (bc _ _) *)
-(*                         (identity _) *)
-(*                         (stF_pw A P · # F u)  *)
-(*   = st2_pw stH I A P · # H (identity (I ⊗ v P) #, u). *)
-(* Proof. *)
-(*   st2_pw stH I A P · # H (identity (I ⊗ v P) #, PInitial_mor A_Galg_PInitial c) · c *)
 
 (* TODO: faire le cas où c est un coproduit ?
 maybe this one is useless then
