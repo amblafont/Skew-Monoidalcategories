@@ -16,9 +16,8 @@ skew monoidal categories.
 of Fiore-Saville "List object with algebraic structures" (extended version)
 3. [`SkewMonoids.v`](SkewMonoids.v)
 4. [`IModules.v`](IModules.v): category of pointed I-modules
-5. [`StructuralActions.v`](StructuralActions.v) 
-6. [`StructuralStrengths.v`](StructuralStrengths.v)
-7. [`InitialAlgebraicMonoid.v`](InitialAlgebraicMonoid.v): construction of an 
+5. [`StructuralStrengths.v`](StructuralStrengths.v)
+6. [`InitialAlgebraicMonoid.v`](InitialAlgebraicMonoid.v): construction of an 
 initial algebraic skew-monoid.
 
 

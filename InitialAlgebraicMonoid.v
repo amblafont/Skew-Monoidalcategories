@@ -376,14 +376,16 @@ Proof.
 Qed.
 
 
-Context (F : V ⟶ V) (st : tensorial_strength _ hsV F) (Fomega: is_omega_cocont F).
+Context (F : V ⟶ V) (st : strength _ hsV F) (Fomega: is_omega_cocont F).
 
-Let stF_nat :=  (pr1 st : nat_trans _ _ ).
-Local Definition stF_pw (X : V) (Y : M) : V ⟦ F X ⊗ (v Y) , F (X ⊗ (v Y)) ⟧ := stF_nat (X ,, Y).
+Let stF_nat :=  (st : nat_trans _ _ ).
+Local Definition stF_pw (X : V) (Y : M) : V ⟦ F X ⊗ (v Y) , F (X ⊗ (v Y)) ⟧ :=
+  stF_nat (X ,, Y).
 
 
 
-Definition H : V ⊠ V ⟶ V := BinCoproduct_of_functors _ _ bc (pr1_functor _ _) (pr2_functor _ _ ∙ F).
+Definition H : V ⊠ V ⟶ V := BinCoproduct_of_functors _ _ bc (pr1_functor _ _)
+                                                     (pr2_functor _ _ ∙ F).
 
 
 Definition stH_data :
@@ -656,6 +658,7 @@ Qed.
 
 Definition A_Falg : V ⟦ F A , A ⟧ := ι₂ · A_Galg.
 
+
 (* Very useful lemma *)
 Lemma general_lemma {X Y : M} (u : IModule_Mor V    (X ⊗  Y : IModule _)%M   (X : IModule _) )(v' : V ⟦ A ⊗ v X , A ⟧)
       (w : V ⟦ A ⊗ v Y , A ⟧)
@@ -670,6 +673,8 @@ Lemma general_lemma {X Y : M} (u : IModule_Mor V    (X ⊗  Y : IModule _)%M   (
          BinCoproductArrow V (tensor_left_bp _ _ _) (λ'  _ · w1)
        (stF_pw A Y · # F w · A_Falg))
   (eqw : (vv1 #⊗ identity (v Y) · w = u · vv1))
+  (equ : (im_action V (X : IModule _) #⊗ identity (v Y)) · u =
+         α' ((v X, I), v Y) · (identity (v X) #⊗ λ' (v Y)) · u)
   :
    α' ((A , v X) , v Y) · (identity A #⊗ u) · v' =   (v' #⊗ identity (v Y)) · w.
 Proof.
@@ -728,9 +733,10 @@ Proof.
     {
       apply cancel_postcomposition.
       do 2 rewrite (functor_comp F), assoc.
-      do 2 apply cancel_postcomposition.
+      apply cancel_postcomposition.
       apply pathsinv0.
-      use (tensorial_strength_pentagon_eq st).
+      use (strength_pentagon_eq _ hsV st).
+      exact equ.
     }
     change (tensorial_strength_nat_pw st)  with stF_pw.
     repeat rewrite <- assoc.
@@ -808,6 +814,167 @@ Proof.
         cbn -[A A_Falg].
         eapply usual_eq2.
         exact eqw'.
+Qed.
+
+
+(* Very useful lemma (the symmetric of the previous one)
+TODO: merge the two general_lemmas into a single one
+ *)
+Lemma general_lemma' {X Y : M} (u : IModule_Mor V    (X ⊗  Y : IModule _)%M   (Y : IModule _) )
+      (v' : V ⟦ A ⊗ v Y , A ⟧)
+      (w : V ⟦ A ⊗ v X , A ⟧)
+      (fintyp :=    α' ((A , v X) , v Y) · (identity A #⊗ u) · v' =   (w #⊗ identity (v Y)) · v')
+  {vv1 : V ⟦ v Y, A ⟧}
+  (veq : (A_Galg #⊗ identity (v Y)) · v' =
+         BinCoproductArrow V (tensor_left_bp _ _ _) (λ'  _ · vv1)
+       (stF_pw A Y · # F v' · A_Falg))
+  {w1 : V ⟦ v X, A ⟧}
+  (* Actually, I only need the ι₂ e1 = ι₂ e2 of the following equation e1 = e2 *)
+  (eqw' :   A_Galg #⊗ identity (v X) · w = 
+         BinCoproductArrow V (tensor_left_bp _ _ _) (λ'  _ · w1)
+       (stF_pw A X · # F w · A_Falg))
+  (eqw :   w1 #⊗ identity v Y · v' = u · vv1)
+
+  (equ : (im_action V (X : IModule _) #⊗ identity (v Y)) · u =
+         α' ((v X, I), v Y) · (identity (v X) #⊗ λ' (v Y)) · u)
+  : fintyp.
+Proof.
+  use (A_Galg_mor2_unique (P := X) (Q := Y) (α' ((I, v X), v Y) · (identity I #⊗ u · (λ'  _ · vv1))) A_Falg).
+    - etrans.
+      {
+        repeat rewrite assoc.
+        apply cancel_postcomposition.
+        apply cancel_postcomposition.
+        apply (nat_trans_ax α' _ _ ((_ #, _) #, _)).
+      }
+      etrans.
+      {
+        apply cancel_postcomposition.
+        rewrite <- assoc.
+        apply cancel_precomposition.
+        etrans.
+        {
+          apply cancel_postcomposition.
+          cbn -[A A_Galg].
+          eapply (maponpaths (fun z => (A_Galg #⊗ z))).
+          apply (functor_id tensor).
+        }
+        apply (binprod_functor_swap_morphisms tensor).
+      }
+      etrans.
+      {
+        apply cancel_postcomposition.
+        apply cancel_postcomposition.
+        apply  alpha_bincoproduct_eq.
+      }
+      cbn -[A A_Galg].
+(* A_action_ax : (λ'  I + stF_pw A IM · # F A_action)%m · A_Galg = A_Galg #⊗ identity I · A_action *)
+(* m_ax : BinCoproductArrow V (tensor_left_bp I (F A) A) (λ'  A) (stF_pw A AM · # F m · ι₂ · A_Galg) = A_Galg #⊗ identity A · m *)
+      etrans.
+      {
+        repeat rewrite <- assoc.
+        apply cancel_precomposition.
+        apply cancel_precomposition.
+        exact veq.
+      }
+      etrans.
+      {
+        apply cancel_precomposition.
+        etrans.
+        {
+          apply cancel_postcomposition.
+          apply bc_id_tensor.
+        }
+        apply (precompWithBinCoproductArrow _ (tensor_left_bp_gen _ _)(tensor_left_bp_gen _ _)).
+      }
+      etrans ; [apply (precompWithBinCoproductArrow _ (tensor_left_bp_gen (tensor_left_bp_gen _ _) _)(tensor_left_bp_gen _ _))|].
+    apply maponpaths.
+    apply pathsinv0.
+    etrans.
+    {
+      apply cancel_postcomposition.
+      do 2 rewrite (functor_comp F), assoc.
+      apply cancel_postcomposition.
+      apply pathsinv0.
+      use (strength_pentagon_eq _ hsV st).
+      exact equ.
+    }
+    change (tensorial_strength_nat_pw st)  with stF_pw.
+    repeat rewrite <- assoc.
+    apply cancel_precomposition.
+    cbn -[A A_Galg].
+    repeat rewrite assoc.
+    do 2 apply cancel_postcomposition.
+    apply pathsinv0.
+    rewrite <- (functor_id F).
+    apply (nat_trans_ax stF_nat _ _ (_ #, (u : M ⟦_ , _⟧))).
+  -   red.
+      etrans;[apply assoc|].
+      etrans.
+      {
+        apply cancel_postcomposition.
+        etrans;[apply pathsinv0, (functor_comp (φ₂ tensor (v Y)))|].
+        exact (maponpaths (fun z => z #⊗ _) eqw').
+      }
+      etrans.
+      {
+        apply cancel_postcomposition.
+        (* etrans; [eapply (maponpaths (fun z => z #⊗ _)), BinCoproductOfIdentities|]. *)
+        apply (BinCoproductArrow_tensor (tensor_left_bp _ _ _)).
+      }
+      etrans ; [apply (postcompWithBinCoproductArrow _ (tensor_left_bp_gen (tensor_left_bp_gen _ _) _))|].
+      apply map_on_two_paths.
+      + repeat rewrite assoc.
+        etrans.
+        {
+          apply cancel_postcomposition.
+          apply (functor_comp (φ₂ tensor (v Y))).
+        }
+        etrans; revgoals.
+        {
+          apply cancel_postcomposition.
+          etrans; revgoals.
+          {
+            etrans;[|apply  assoc].
+            apply cancel_precomposition.
+            apply pathsinv0.
+            apply (nat_trans_ax λ' ).
+          }
+          apply pathsinv0.
+          etrans;[apply assoc|].
+          apply cancel_postcomposition.
+          apply skewmonoidal_precat_alpha_lambda_eq.
+        }
+        repeat rewrite <- assoc.
+        apply cancel_precomposition.
+        change (w1 #⊗ identity (v Y) · v' = u · vv1).
+        exact eqw.
+      + etrans.
+        {
+          apply cancel_postcomposition.
+          etrans;[apply (functor_comp (φ₂ tensor _))|].
+          apply cancel_postcomposition.
+          apply (functor_comp (φ₂ tensor _)).
+        }
+        repeat rewrite <- assoc.
+        apply cancel_precomposition.
+        etrans; revgoals.
+        {
+          etrans;[|apply pathsinv0,assoc].
+          apply cancel_postcomposition.
+          etrans;[|apply cancel_precomposition, pathsinv0, (functor_comp F)].
+          etrans;[|apply pathsinv0,assoc].
+          apply cancel_postcomposition.
+          use (nat_trans_ax stF_nat _ _ (_ #, identity _)).
+        }
+        repeat rewrite <- assoc.
+        apply cancel_precomposition.
+        (* change ( (( A_Falg #⊗ identity (v Y)) · w) = stF_pw A Y · (# F w · A_Falg)). *)
+        change ( (( A_Falg #⊗ identity (v Y)) · v') = stF_pw A Y · (# F v' · A_Falg)).
+        rewrite assoc.
+        cbn -[A A_Falg].
+        eapply usual_eq2.
+        exact veq.
 Qed.
 
 
@@ -961,7 +1128,7 @@ Proof.
       etrans.
       {
       apply cancel_postcomposition.
-      apply tensorial_strength_triangle_eq.
+      apply strength_triangle_eq.
       }
       apply pathsinv0, functor_comp.
 Qed.
@@ -976,6 +1143,9 @@ Proof.
   - exact (! A_action_ax').
   - exact (! A_action_ax').
   - exact ηA_action.
+  - cbn.
+    apply pathsinv0.
+    apply I_mult_laws.
 Qed.
 
 
@@ -1159,11 +1329,16 @@ Proof.
     + exact (! A_action_ax').
     + exact (! A_action_ax').
     + exact ηA_action.
+    + cbn.
+      apply pathsinv0, I_mult_laws.
 Qed.
 
 
 Definition A_actionM : IModule_Mor V (AM ⊗ IM : IModule _)%M AM :=
   A_action ,, A_action_is_IModule_mor.
+
+(* Lemma A_action_mul :   A_action #⊗ identity I · A_action = α' ((A, I), I) · identity A #⊗ λ' I · A_action. *)
+(* Admitted. *)
 
 (* Nécessite de montrer que r est un morphisme de IModule *)
 (* TODO: reflechir a factoriser cette preuve avec celle de l'associativité) *)
@@ -1202,7 +1377,8 @@ Proof.
        etrans;[|apply id_left].
        apply cancel_postcomposition.
        apply (functor_id tensor).
-
+    + cbn -[A].
+      exact (! A_action_law2).
 Qed.
 
 
@@ -1222,8 +1398,32 @@ Qed.
 
 
 
+Lemma I_mult_laws' A : α' ((I,, I),, A) · identity I #⊗ λ' A · λ' A = λ' I #⊗ identity A · λ' A.
+Proof.
+   etrans.
+    {
+      etrans;[apply pathsinv0,assoc|].
+      apply cancel_precomposition.
+      apply (nat_trans_ax λ').
+    }
+    rewrite assoc.
+    apply cancel_postcomposition.
+    apply skewmonoidal_precat_alpha_lambda_eq.
+Qed.
 
 
+Lemma μA_aux_assoc :
+  α' ((A, I), A) · identity A #⊗ λ' A · μA = A_action #⊗ identity A · μA.
+Proof.
+  eapply (general_lemma' (X := IM) (Y := AM) ( λM _  )).
+   - exact (!μA_ax2).
+   - exact (!A_action_ax').
+   - cbn -[A].
+     etrans;[exact Aunitl|].
+     apply pathsinv0, id_right.
+   - cbn -[A].
+     apply pathsinv0, I_mult_laws'.
+Qed.
 
 
 Lemma μA_associativity :   α' ((A , A), A) · (identity A #⊗ μA) · μA
@@ -1237,7 +1437,10 @@ Proof.
     etrans;[|apply id_left].
     apply cancel_postcomposition.
     apply (functor_id tensor).
-Qed.
+  - cbn -[A].
+    apply pathsinv0, μA_aux_assoc.
+
+Qed. 
 
 
 Definition A_monoid : skewMonoid V :=

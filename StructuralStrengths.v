@@ -14,8 +14,6 @@ Require Import UniMath.CategoryTheory.PrecategoryBinProduct.
 Require Import SkewMonoidalCategories.
 Require Import SkewMonoids.
 Require Import IModules.
-Require Import StructuralActions.
-(* Require Import SkewActions. *)
 
 
 
@@ -24,100 +22,90 @@ Local Notation "'id' X" := (identity X) (at level 30).
 
 Section A.
 
-Context (Mon_V : skewmonoidal_precat).
+Context (V : skewmonoidal_precat).
 
-Let V := skewmonoidal_precat_precat Mon_V.
 Context (hsV : has_homsets V).
-Let I := skewmonoidal_precat_unit Mon_V.
-Let tensor := skewmonoidal_precat_tensor Mon_V.
+Notation I := (skewmonoidal_precat_unit V).
+Notation tensor := (skewmonoidal_precat_tensor V).
 Notation "X ⊗ Y" := (tensor (X , Y)).
 
 Notation "X ⊗ Y" := (IModule_tensor_functor _ hsV (X, Y))  : module_scope.
 (* Notation "f #⊗ g" := (# (IModule_tensor_functor _ hsV) (f #, g)) : module_scope. *)
 Delimit Scope module_scope with M.
 
-Let M := precategory_IModule Mon_V hsV.
-Let IM := (IModule_I Mon_V : M).
-Let λM := (IModule_left_unitor Mon_V).
-Let αM := (IModule_associator Mon_V).
+Let M := precategory_IModule V hsV.
+Let IM := (IModule_I V : M).
+Let λM := (IModule_left_unitor V).
+Local Notation ρ' := (skewmonoidal_precat_right_unitor V).
 
-Section Strengths_Definition.
+Local Notation "C ⊠ D" := (precategory_binproduct C D) (at level 38).
+Local Notation "( c , d )" := (make_precatbinprod c d).
+Local Notation "( f #, g )" := (precatbinprodmor f g).
 
-Context (actn actn' : action Mon_V hsV).
+Local Infix "×" := pair_functor  : functor_scope .
+Delimit Scope functor_scope with F.
 
-Let A := pr1 actn.
-Let odot := pr1 (pr2 actn).
-Let ϱ := pr1 (pr2 (pr2 actn)).
-Let χ := pr1 (pr2 (pr2 (pr2 actn))).
-Let A' := pr1 actn'.
-Let odot' := pr1 (pr2 actn').
-Let ϱ' := pr1 (pr2 (pr2 actn')).
+Definition strength_data (F : V ⟶ V) : UU :=
+  nat_trans (C := V ⊠ M)(C' := V) ((F × forget_IModules V hsV)%F ∙ tensor)
+            ((functor_identity _ × forget_IModules V hsV)%F ∙ tensor ∙ F).
 
-Let χ' := pr1 (pr2 (pr2 (pr2 actn'))).
+Identity Coercion strength_data_to_nat_trans : strength_data >-> nat_trans.
+Notation "X #⊗ Y" := (# tensor (X #, Y)) (at level 20).
+Notation α' := (skewmonoidal_precat_associator V).
+Notation λ' := (skewmonoidal_precat_left_unitor V).
 
-Section Strengths_Natural_Transformation.
+Definition strength_laws {F : V ⟶ V} (s : strength_data F) :=
+  (* triangle *)
+  (∏ (a : V), ρ' (F a) · (s (a, IM))   = # F (ρ' a)) ×
+ (* pentagon *)
+ ( ∏ (a : V), ∏ (x y : IModule _) (z : V)(f : V ⟦ x ⊗ y , z ⟧)
+   (eqf : im_action _ x #⊗ identity y · f = α' ((x , I) , y) · identity x #⊗ λ' y · f)
+  ,
+  (α' ((F a,  x),  y)) · s (a , ((x : ob M) ⊗ (y : ob M))%M)
+                       · # F (identity _ #⊗ f)
+  =
+  (s (a, (x : M))) #⊗ (id ( y)) · ( s ((a ⊗  x), (y : M))) · (#F ( α' ((a,  x),  y)))
+                       · # F (identity _ #⊗ f)).
 
-Context (F : A ⟶ A').
+Definition strength (F : V ⟶ V) : UU := ∑ (s : strength_data F), strength_laws s.
 
-Notation "X ⊙ Y" := (odot (X , Y)) (at level 31).
-Notation "f #⊙ g" := (#odot (f #, g)) (at level 31).
-Notation "X ⊙' Y" := (odot' (X , Y)) (at level 31).
-Notation "f #⊙' g" := (#odot' (f #, g)) (at level 31).
-
-Definition strength_dom : A ⊠ M ⟶ A' :=
-  functor_composite (pair_functor F (functor_identity _)) odot'.
-
-Lemma strength_dom_ok: functor_on_objects strength_dom = λ ax, F (ob1 ax) ⊙' (ob2 ax).
-Proof.
-  apply idpath.
-Qed.
-
-Definition strength_codom : A ⊠ M ⟶ A' :=
-  functor_composite odot F.
-
-Lemma strength_codom_ok: functor_on_objects strength_codom = λ ax, F (ob1 ax ⊙ ob2 ax).
-Proof.
-  apply idpath.
-Qed.
+Coercion strength_data_from_strength {F : V ⟶ V} (s : strength F)
+  : strength_data F := pr1 s.
 
 
-Definition strength_triangle_eq (ϛ : strength_dom ⟹ strength_codom) :=
-  ∏ (a : A), pr1 ϱ' (F a) · (pr1 ϛ (a, IM))   = (#F (pr1 ϱ a)).
+Definition strength_triangle_eq {F : V ⟶ V} (s : strength F) :
+    ∏ (a : V), ρ' (F a) · (s (a, IM))   = # F (ρ' a)  := pr1 (pr2 s).
 
-Definition strength_pentagon_eq (ϛ : strength_dom ⟹ strength_codom): UU := ∏ (a : A), ∏ (x y : M),
-  (pr1 χ' ((F a, x), y)) · pr1 ϛ (a, x ⊗ y)%M =
-  (pr1 ϛ (a, x)) #⊙' (id y) · (pr1 ϛ (a ⊙ x, y)) · (#F (pr1 χ ((a, x), y))).
-
-End Strengths_Natural_Transformation.
-
-Definition strength (F : A ⟶ A'): UU := ∑ (ϛ : strength_dom F ⟹ strength_codom F),
-  (strength_triangle_eq F ϛ) × (strength_pentagon_eq F ϛ).
-
-End Strengths_Definition.
-
-(*
-  The standard tensorial strength:
-  F(A) ⊗ B --> F(A ⊗ B)
-*)
-Definition tensorial_strength := strength (tensorial_action Mon_V hsV) (tensorial_action Mon_V hsV).
-
+Definition strength_pentagon_eq {F : V ⟶ V} (s : strength F) :
+  ∏ (a : V), ∏ (x y : IModule _) (z : V)(f : V ⟦ x ⊗ y , z ⟧)
+   (eqf : im_action _ x #⊗ identity y · f = α' ((x , I) , y) · identity x #⊗ λ' y · f)
+  ,
+  (α' ((F a,  x),  y)) · s (a , ((x : ob M) ⊗ (y : ob M))%M)
+                       · # F (identity a #⊗ f)
+  =
+  (s (a, (x : M))) #⊗ (id ( y)) · ( s ((a ⊗  x), (y : M))) · (#F ( α' ((a,  x),  y)))
+                   · # F (identity a #⊗ f)
+   := pr2 (pr2 s).
 
 End A.
+
+
 
 Section tensorial.
 
 Context {V : skewmonoidal_precat}.
 Context {hsV : has_homsets V}.
-Context {F : V ⟶ V} (st : tensorial_strength _ hsV F).
+Context {F : V ⟶ V} (st : strength _ hsV F).
 Notation I := (skewmonoidal_precat_unit V).
 Notation tensor := (skewmonoidal_precat_tensor V).
 Notation "X ⊗ Y" := (tensor (X , Y)).
 Notation "X #⊗ Y" := (# tensor (X #, Y)) (at level 20).
 Notation M := (precategory_IModule _ hsV).
 
-Definition tensorial_strength_nat   : strength_dom _ hsV _ _ _ ⟹ strength_codom _ hsV _ _  _ := pr1 st.
-Definition tensorial_strength_nat_pw (X : V) (Y : M) : V ⟦ F X ⊗ (Y : IModule _) , F (X ⊗ (Y : IModule _)) ⟧ :=
-  (pr1 st : nat_trans _ _) (X , Y).
+(* Definition tensorial_strength_nat   : strength_dom _ hsV _ _ _ ⟹ strength_codom _ hsV _ _  _ := pr1 st. *)
+Definition tensorial_strength_nat_pw (X : V) (Y : M) :
+  V ⟦ F X ⊗ (Y : IModule _) , F (X ⊗ (Y : IModule _)) ⟧ :=
+  st (X , Y).
 
 Notation τ := tensorial_strength_nat_pw.
 
@@ -129,11 +117,11 @@ Notation "X ⊗ Y" := (IModule_tensor_functor _ hsV (X, Y))  : module_scope.
 (* Notation "f #⊗ g" := (# (IModule_tensor_functor _ hsV) (f #, g)) : module_scope. *)
 Delimit Scope module_scope with M.
 
-Definition tensorial_strength_triangle_eq : ∏ (a : V), ρ (F a) · τ a IM   = (#F (ρ a)) := pr1 (pr2 st).
-Definition tensorial_strength_pentagon_eq :  ∏ (a : V), ∏ (x y : IModule _),
-  (α ((F a,  x),  y)) · τ a ((x : ob M) ⊗ (y : ob M))%M =
-  (τ a x) #⊗ (id ( y)) · ( τ (a ⊗  x) y) · (#F ( α ((a,  x),  y)))
-  := pr2 (pr2 st).
+(* Definition tensorial_strength_triangle_eq : ∏ (a : V), ρ (F a) · τ a IM   = (#F (ρ a)) := pr1 (pr2 st). *)
+(* Definition tensorial_strength_pentagon_eq :  ∏ (a : V), ∏ (x y : IModule _), *)
+(*   (α ((F a,  x),  y)) · τ a ((x : ob M) ⊗ (y : ob M))%M = *)
+(*   (τ a x) #⊗ (id ( y)) · ( τ (a ⊗  x) y) · (#F ( α ((a,  x),  y))) *)
+(*   := pr2 (pr2 st). *)
 
 Local Notation η := (sm_unit _).
 Local Notation μ := (sm_mult _).
