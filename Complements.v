@@ -24,8 +24,6 @@ Require Import UniMath.CategoryTheory.limits.graphs.eqdiag.
 Require Import UniMath.CategoryTheory.FunctorAlgebras.
 
 
-(* Require Import UniMath.Foundations.NaturalNumbers. *)
-
 Local Open Scope cat.
 
 (** Binary product of categories *)
@@ -97,10 +95,12 @@ Section Theorem47.
 
 End Theorem47.
 
+(** The rest of this file consists of useful lemmas that should be uploaded
+ to UniMath at some point. *)
 
 Local Infix ",," := bindelta_pair_functor  : functor_scope .
 
-(* TODO upload in UniMath *)
+(** id + id = id *)
 Lemma BinCoproductOfIdentities
            {C : precategory}   {a b : C}
            (ccab : BinCoproduct C a b) :
@@ -148,7 +148,8 @@ Proof.
   apply dirprod_paths;[apply id_right|apply id_left].
 Qed.
 
-Lemma binprod_functor_combine_morphisms_reverse {C D E : precategory} (F : C ⊠ D ⟶ E)
+Lemma binprod_functor_combine_morphisms_reverse {C D E : precategory}
+      (F : C ⊠ D ⟶ E)
       {c c'} (f : C ⟦ c , c' ⟧)
       {d d'} (g : D ⟦ d , d' ⟧)
   : # F (identity _ #, g) · # F (f #, identity _)  = # F (f #, g).
@@ -278,82 +279,81 @@ Definition is_omega_cocont_fix_snd_arg c : is_omega_cocont (functor_fix_snd_arg 
 
 End  FunctorFixCocont.
 
-(* TODO: upload in UniMath *)
-  Lemma mapdiagram_bincoproduct_eqdiag {C : precategory}{D : category}
-       (F : functor C D)(a b : C)  :
-    eq_diag (C := D)
-                     (mapdiagram F (bincoproducts.bincoproduct_diagram a b))
-                     (bincoproducts.bincoproduct_diagram (F a) (F b)).
-  Proof.
-    use tpair.
-    - use bool_rect; apply idpath.
-    - intros ??; use empty_rect.
-  Defined.
+Lemma mapdiagram_bincoproduct_eqdiag {C : precategory}{D : category}
+      (F : functor C D)(a b : C)  :
+  eq_diag (C := D)
+          (mapdiagram F (bincoproducts.bincoproduct_diagram a b))
+          (bincoproducts.bincoproduct_diagram (F a) (F b)).
+Proof.
+  use tpair.
+  - use bool_rect; apply idpath.
+  - intros ??; use empty_rect.
+Defined.
 
-  Definition coconeeq {C : precategory} (hsC : has_homsets C) {g : graph}{d:  diagram g C}{x : C}
-             (cc1 cc2 : cocone d x)
-             (eqin : ∏ g, coconeIn cc1 g = coconeIn cc2 g)  : cc1 = cc2.
-  Proof.
-    use subtypePath'.
-    - apply funextsec.
-      exact eqin.
-    - repeat (apply impred_isaprop; intro).
-      apply hsC.
-  Defined.
-
+Definition coconeeq {C : precategory} (hsC : has_homsets C) {g : graph}{d:  diagram g C}{x : C}
+           (cc1 cc2 : cocone d x)
+           (eqin : ∏ g, coconeIn cc1 g = coconeIn cc2 g)  : cc1 = cc2.
+Proof.
+  use subtypePath'.
+  - apply funextsec.
+    exact eqin.
+  - repeat (apply impred_isaprop; intro).
+    apply hsC.
+Defined.
 
 
-  (* TODO: upload in UniMath  *)
-  Definition equiv_isBinCoproduct1 {C : precategory}(hsC : has_homsets C) { a b c}
-        (u : C ⟦ a, c⟧)(v : C ⟦ b, c⟧) :
-    isBinCoproduct C a b c u v -> isBinCoproductCocone _ _ _ _ u v :=
-    make_isBinCoproductCocone _ hsC _ _ _ _ _.
 
-  (* TODO: upload in UniMath (make BinCoproducts_from_Colims use this lemma) *)
-  Lemma equiv_isBinCoproduct2 {C : precategory}(hsC : has_homsets C) { a b c}
-        (u : C ⟦ a, c⟧)(v : C ⟦ b, c⟧) :
-     isBinCoproductCocone _ _ _ _ u v -> isBinCoproduct C a b c u v.
-  Proof.
-    intro h.
-    set (CC := make_BinCoproductCocone _ _ _ _ _ _ h); simpl.
-    intros x f g.
-    (* set (CCfg := (bincoproducts.BinCoproductArrow C CC f g)). *)
-    use unique_exists; simpl.
-    - apply (bincoproducts.BinCoproductArrow C CC f g).
-    - abstract (split;
-                [ apply (bincoproducts.BinCoproductIn1Commutes  _ _ _ CC)
-                | apply (bincoproducts.BinCoproductIn2Commutes  _ _ _ CC)]).
-    - abstract (intros h'; apply isapropdirprod; apply hsC).
-    - intros h' [H1 H2].
-      eapply (bincoproducts.BinCoproductArrowUnique _ _ _ CC).
-      + exact H1.
-      + exact H2.
-  Defined.
+(* TODO: upload in UniMath  *)
+Definition equiv_isBinCoproduct1 {C : precategory}(hsC : has_homsets C) { a b c}
+           (u : C ⟦ a, c⟧)(v : C ⟦ b, c⟧) :
+  isBinCoproduct C a b c u v -> isBinCoproductCocone _ _ _ _ u v :=
+  make_isBinCoproductCocone _ hsC _ _ _ _ _.
 
-  Lemma cocont_preserves_isBinCoproduct
-        {C : category}
-        {D : category}
-        {F : functor C D}
-        (cocontF : is_cocont F)
-        {A B : C} (ccAB : BinCoproduct C A B) :
-    isBinCoproduct D (F A) (F B) (F ccAB)
-                   (# F (BinCoproductIn1 C ccAB))
-                   (# F (BinCoproductIn2 C ccAB)).
-  Proof.
-    set (Io := pr2 ccAB).
-    cbn in Io.
-    red in cocontF.
-    transparent assert (h : (BinCoproductCocone D (F A) (F B))).
-    {
-      red.
-      eapply (eq_diag_liftcolimcocone (C := D)).
-      - unshelve apply mapdiagram_bincoproduct_eqdiag.
-      - eapply make_ColimCocone.
-        eapply cocontF.
-        apply equiv_isBinCoproduct1.
-        + exact (homset_property C).
-        + exact (isBinCoproduct_BinCoproduct _ ccAB).
-    }
+(* TODO: upload in UniMath (make BinCoproducts_from_Colims use this lemma) *)
+Lemma equiv_isBinCoproduct2 {C : precategory}(hsC : has_homsets C) { a b c}
+      (u : C ⟦ a, c⟧)(v : C ⟦ b, c⟧) :
+  isBinCoproductCocone _ _ _ _ u v -> isBinCoproduct C a b c u v.
+Proof.
+  intro h.
+  set (CC := make_BinCoproductCocone _ _ _ _ _ _ h); simpl.
+  intros x f g.
+  (* set (CCfg := (bincoproducts.BinCoproductArrow C CC f g)). *)
+  use unique_exists; simpl.
+  - apply (bincoproducts.BinCoproductArrow C CC f g).
+  - abstract (split;
+              [ apply (bincoproducts.BinCoproductIn1Commutes  _ _ _ CC)
+              | apply (bincoproducts.BinCoproductIn2Commutes  _ _ _ CC)]).
+  - abstract (intros h'; apply isapropdirprod; apply hsC).
+  - intros h' [H1 H2].
+    eapply (bincoproducts.BinCoproductArrowUnique _ _ _ CC).
+    + exact H1.
+    + exact H2.
+Defined.
+
+Lemma cocont_preserves_isBinCoproduct
+      {C : category}
+      {D : category}
+      {F : functor C D}
+      (cocontF : is_cocont F)
+      {A B : C} (ccAB : BinCoproduct C A B) :
+  isBinCoproduct D (F A) (F B) (F ccAB)
+                 (# F (BinCoproductIn1 C ccAB))
+                 (# F (BinCoproductIn2 C ccAB)).
+Proof.
+  set (Io := pr2 ccAB).
+  cbn in Io.
+  red in cocontF.
+  transparent assert (h : (BinCoproductCocone D (F A) (F B))).
+  {
+    red.
+    eapply (eq_diag_liftcolimcocone (C := D)).
+    - unshelve apply mapdiagram_bincoproduct_eqdiag.
+    - eapply make_ColimCocone.
+      eapply cocontF.
+      apply equiv_isBinCoproduct1.
+      + exact (homset_property C).
+      + exact (isBinCoproduct_BinCoproduct _ ccAB).
+  }
   apply equiv_isBinCoproduct2; [ apply homset_property|].
   red.
   generalize (pr2 h).

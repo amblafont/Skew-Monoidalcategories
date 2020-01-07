@@ -238,7 +238,7 @@ End Summary.
 
 (** * Axiomatized theorem from Fiore-Saville
 
-TODO
+Covered by Complements.v
 Axiomatization of Theorem 4.7 of "List object with
 algebraic structure" (Fiore-Saville, extended version).
 
