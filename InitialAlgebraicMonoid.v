@@ -23,7 +23,6 @@ Require Import UniMath.CategoryTheory.FunctorAlgebras.
 Require Import UniMath.CategoryTheory.FunctorCategory.
 
 Require Import SkewMonoidalCategories.
-Require Import StructuralActions.
 Require Import StructuralStrengths.
 Require Import IModules.
 Require Import Complements.

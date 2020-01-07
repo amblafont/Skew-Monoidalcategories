@@ -60,27 +60,9 @@ Section Theorem47.
 
   Let iniChd := (initChain OC (functor_fix_fst_arg D C C F d)).
 
-(*   Definition cocone_a : cocone (mapdiagram J iniChd) a. *)
-(*   Proof. *)
-(* use make_cocone. *)
-(* - intro n. *)
-(*   cbn. *)
-(* - abstract (intros m n e; destruct e ; *)
-(*             apply (coconeInCommutes (colimCocone CC) (S m) _ (idpath _))). *)
-(* Defined. *)
-  Proof.
 
   Let μFd := (InitialObject (colimAlgInitial hsC OC (omegaF d) (chC iniChd))).
 
-  (* Definition Thm47_mor : A ⟦ J (carrier μFd) , a ⟧. *)
-
-  (*   red in omegaJ. *)
-  (*   unfold preserves_colimit in omegaJ. *)
-  (*   set (chI := (chC (initChain OC (functor_fix_fst_arg D C C F d)))). *)
-  (*   specialize (omegaJ _ _ _ (pr2 chI)). *)
-  (*   (initChain OC _) *)
-  (*     ColimCocone *)
-  (*   apply  *)
 
   Lemma Thm47 : ∃! (β : A ⟦ J (carrier μFd) , a ⟧), 
                 h (d , carrier μFd) · # G ( identity _ #, β ) · α  =
