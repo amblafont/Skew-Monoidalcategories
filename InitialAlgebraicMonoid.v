@@ -1293,8 +1293,6 @@ eqw
 
 
 
-  (* (v' #⊗ identity Y) *)
-    (* (v' #⊗ identity Y) · w). *)
 
 
 Lemma A_action_is_IModule_mor : IModule_Mor_laws V (AM ⊗ IM : IModule _)%M AM A_action.
@@ -1319,8 +1317,6 @@ Qed.
 Definition A_actionM : IModule_Mor V (AM ⊗ IM : IModule _)%M AM :=
   A_action ,, A_action_is_IModule_mor.
 
-(* Lemma A_action_mul :   A_action #⊗ identity I · A_action = α' ((A, I), I) · identity A #⊗ λ' I · A_action. *)
-(* Admitted. *)
 
 (* Nécessite de montrer que r est un morphisme de IModule *)
 (* TODO: reflechir a factoriser cette preuve avec celle de l'associativité) *)
@@ -1455,20 +1451,11 @@ Local Notation η := (sm_unit _).
 Local Notation μ := (sm_mult _).
 
 
-(* Equation that a F-monoid X should satisfy *)
-(* Definition Fmonoid_equation (X : skewMonoid V) *)
-(*            (algX : V ⟦ F X , X⟧) *)
-(*   : UU := *)
-(*   stF_pw X (IModule_from_monoid _ X) · # F (μ X) · algX = *)
-(*            algX #⊗ identity X · (μ X). *)
 
 Local Notation κ := am_alg .
 
 Lemma Fmonoid_equation_Galg
       (X : algMonoid st)
-      (* (X : skewMonoid V) *)
-      (* (algX : V ⟦ F X , X⟧) *)
-      (*      (eqx : Fmonoid_equation X algX) *)
     :  BinCoproductArrow _ (tensor_left_bp_gen _ _) 
                              (λ'  X)
                              (stF_pw X (IModule_from_monoid _ X) · # F (μ X) · κ X)  =
@@ -1534,24 +1521,12 @@ Proof.
   - etrans;[apply (skewMonoid_Mor_η _ m)|].
     apply pathsinv0, id_left.
   - apply (algMonoid_Mor_alg m).
-  (*
-  etrans;[apply postcompWithBinCoproductArrow|].
-  apply map_on_two_paths.
-  - etrans;[apply skewMonoid_Mor_η|].
-    apply pathsinv0, id_left.
-  - apply algMonoid_Mor_alg.
-*)
 Qed.
 
 Definition algMor_from_algMonoid_Mor {X : algMonoid st}
            (m : algMonoid_Mor A_Fmonoid X)
   : algebra_mor G (InitialObject Ai) (Fmonoid_as_Galg X) :=
   _ ,, algMonoid_Mor_is_Galg_mor m.
-
-(* Definition algMor_from_algMonoid_Mor {X Y : algMonoid st} *)
-(*            (m : algMonoid_Mor X Y) *)
-(*   : algebra_mor G (Fmonoid_as_Galg X)(Fmonoid_as_Galg Y) := *)
-(*   _ ,, algMonoid_Mor_is_Galg_mor m. *)
 
 (* it commutes with unit and algebras: ok
 And then uniqueness is trivial
@@ -1611,9 +1586,6 @@ Lemma useful_lemma_for_i
    BinCoproductArrow  _ (tensor_left_bp _ _ _)  (λ'  (v  P) · j)
           (* ici il y a un choix *)
                       (stF_pw _ _ · (# F (i #⊗ j))  · # F (μ X) · κ X).
-                      (* ((# F i #⊗ j) · stF_pw X (X ,, eX ,, rX) · # F mX · algX). *)
-                      (* ((# F i #⊗ j) · algX #⊗ identity _ · mX). *)
-                      (* ((# F i · algX) #⊗ j · mX). *)
 Proof.
   etrans.
   {
@@ -1664,14 +1636,9 @@ Proof.
 Qed.
 
 Lemma iniMor_IModule_laws
-      (* {X : V} (eX : V ⟦ I , X⟧) (mX : V ⟦X ⊗ X , X⟧) *)
       (X : algMonoid st)
       (i := iniMor X  )
-      (* (left_unitX:   eX #⊗ identity X · mX = λ'  X) *)
-      (* (right_unitX : ρ X · identity X #⊗ eX · mX = identity X  ) *)
-      (* (pentagon : mX #⊗ identity X · mX = pr1 α' ((X, X), X) · identity X #⊗ mX · mX) *)
       (XM := IModule_from_monoid _ X) 
-      (* (rX := (retract_from_partial_monoid  right_unitX)) *)
       : IModule_Mor_laws V AM XM i.
 Proof.
   split.
