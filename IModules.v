@@ -152,19 +152,6 @@ Local Notation φ₁ := (functor_fix_fst_arg _ _ _).
 Local Notation φ₂ := (functor_fix_snd_arg _ _ _).
 
 
-(** A morphism of an F-algebras (F X, g : F X --> X) and (F Y, h : F Y --> Y)
-    is a morphism f : X --> Y such that the following diagram commutes:
-
-    <<
-         F f
-    F x ----> F y
-    |         |
-    | g       | h
-    V         V
-    x ------> y
-         f
-    >>
- *)
 Definition IModule_Mor_laws  (X Y : IModule_data ) (f : X --> Y)
   : UU 
   := ϵ X · f = ϵ Y × σ X · f =  (f #⊗ identity _) · σ Y.

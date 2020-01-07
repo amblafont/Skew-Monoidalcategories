@@ -1,12 +1,31 @@
 # Initial semantics for substitution skew-monoids 
 
-This was tested with Coq 8.9 and UniMath (commit 
-9e1009089faa45c7cfbae3520df8bb7c5927d4ed)
-
 Compilation: make
 
-## Files
+## Dependencies
 
+Coq is required.
+
+The UniMath library is required with at least the following packages:
+Foundations, MoreFoundations, CategoryTheory, and Tactics.
+
+This was tested with:
+- Coq 8.10
+- UniMath commit version 9e1009089faa45c7cfbae3520df8bb7c5927d4ed.
+
+## Summary 
+
+A detailed summary is available at [`Summary.v`](Summary.v).
+
+## Axioms
+
+The formalization relies on the UniMath library.
+
+There is one admitted result in this work: Theorem 4.7 of Fiore-Saville "List 
+object with algebraic structures" (extended version), found in [`Complements.v`](Complements.v).
+
+
+## Files
 
 by order of dependency:
 
@@ -19,12 +38,7 @@ of Fiore-Saville "List object with algebraic structures" (extended version)
 5. [`StructuralStrengths.v`](StructuralStrengths.v)
 6. [`InitialAlgebraicMonoid.v`](InitialAlgebraicMonoid.v): construction of an 
 initial algebraic skew-monoid.
+7. [`Summary.v`](Summary.v): a summary of the important definitions and results.
 
 
-## Axioms
-
-The formalization relies on the UniMath library.
-
-There is one admitted result in this work: Theorem 4.7 of Fiore-Saville "List 
-object with algebraic structures" (extended version), found in [`Complements.v`](Complements.v).
 

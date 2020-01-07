@@ -1,6 +1,6 @@
 (**
 Construction of an initial F-monoid, for F a strengthened endofunctor
-(in the skew-monoidal setting)
+(in the skew-monoidal setting): [algMonoid_Initial]
 **)
 
 Require Import UniMath.Foundations.PartD.
@@ -99,44 +99,27 @@ Notation M_V := (forget_IModules _ hsV).
 
 
 (** _ ⊗ X is omega cocontinuous *)
-Context (ltensor_cc : forall (X : V) , is_cocont (φ₂ tensor X)).
+Context (ltensor_cc : ∏ (X : V) , is_cocont (φ₂ tensor X)).
 
 
 
-Local Lemma tensor_isInitial {o : V}(Io : isInitial _ o)(X : V) :
-  isInitial _ (o ⊗ X).
-Proof.
-  transparent assert (h : (initial.Initial V)).
-  {
-    eapply (eq_diag_liftcolimcocone (C := Vcat)).
-    - eapply (eq_diag_empty_graph (D := Vcat)).
-    - eapply make_ColimCocone.
-      apply initial.equiv_isInitial1 in Io.
-      eapply (ltensor_cc X) in Io.
-      exact Io.
-  }
-  apply initial.equiv_isInitial2.
-  exact (initial.isInitial_Initial h).
-Qed.
+Definition tensor_isInitial {o : V}(Io : isInitial _ o)(X : V) :
+  isInitial _ (o ⊗ X) :=
+  cocont_preserves_isInitial  (C := Vcat)(D := Vcat) (ltensor_cc X) Io.
 
 
-Local Definition O_tensor_X_isInitial (X : V) : isInitial _ (O ⊗ X) := tensor_isInitial (pr2 _) X.
+Local Definition O_tensor_X_isInitial (X : V) : isInitial _ (O ⊗ X) :=
+  tensor_isInitial (pr2 _) X.
 
-Local Definition O_tensor_X_Initial (X : V) : Initial V := make_Initial _ (O_tensor_X_isInitial X).
+Local Definition O_tensor_X_Initial (X : V) : Initial V :=
+  make_Initial _ (O_tensor_X_isInitial X).
 
-(* la aussi on s'en fout de la def *)
-(* (TODO: généralier sur le coproduit) *)
-Context ( tensor_left_isBinCoproduct' : ∏ {A B : V} (ccAB : BinCoproduct _ A B) (C : V),
-  isBinCoproduct _ (A ⊗ C) (B ⊗ C) (ccAB ⊗ C)
-                 (# (φ₂ tensor C) (BinCoproductIn1 _ _))
-                  (# (φ₂ tensor C) (BinCoproductIn2 _ _))).
 Local Definition tensor_left_isBinCoproduct {A B : V} (ccAB : BinCoproduct _ A B) (C : V) :
   isBinCoproduct _ (A ⊗ C) (B ⊗ C) (ccAB ⊗ C)
                  (# (φ₂ tensor C) (BinCoproductIn1 _ _))
-                  (# (φ₂ tensor C) (BinCoproductIn2 _ _)).
-Proof.
-  apply tensor_left_isBinCoproduct'.
-Defined.
+                  (# (φ₂ tensor C) (BinCoproductIn2 _ _)) :=
+   cocont_preserves_isBinCoproduct (C := Vcat)(D := Vcat)
+                                         (ltensor_cc C) ccAB.
 
 
 Definition tensor_left_bp_gen {A B : V} (ccAB : BinCoproduct _ A B)(C : V) : BinCoproduct _ (A ⊗ C) (B ⊗ C) :=
@@ -1798,5 +1781,8 @@ Definition A_isInitial : isInitial (precategory_algMonoid st) A_Fmonoid :=
     make_isInitial (C := precategory_algMonoid st) A_Fmonoid
                    (fun (X : algMonoid st) =>
                         make_iscontr (iniMor_algMonoid X) (iniMor_unique X)).
+
+Definition algMonoid_Initial : Initial (precategory_algMonoid st) :=
+  make_Initial _ A_isInitial.
 
 End A.

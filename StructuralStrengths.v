@@ -28,7 +28,6 @@ Context (hsV : has_homsets V).
 Notation I := (skewmonoidal_precat_unit V).
 Notation tensor := (skewmonoidal_precat_tensor V).
 Notation "X ⊗ Y" := (tensor (X , Y)).
-
 Notation "X ⊗ Y" := (IModule_tensor_functor _ hsV (X, Y))  : module_scope.
 (* Notation "f #⊗ g" := (# (IModule_tensor_functor _ hsV) (f #, g)) : module_scope. *)
 Delimit Scope module_scope with M.
