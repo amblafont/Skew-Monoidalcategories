@@ -34,9 +34,6 @@ Local Open Scope cat.
 Delimit Scope functor_scope with F.
 Infix "××" := pair_functor (at level 31).
 
-Section Summary.
-
-
 
 (**
 The command:
@@ -50,6 +47,10 @@ Notation  "x ::= y"  := ((idpath _ : x = y) = idpath _) (at level 70, no associa
 
 Fail Check (true ::= false).
 Check (true ::= true).
+
+Section Summary.
+
+
 
 
 (** We suppose given a skew monoidal category V
@@ -295,4 +296,22 @@ Check (algMonoid_Initial :
          is_omega_cocont H →
          Initial (precategory_algMonoid st)
          ).
+
+(** Notation for binary coproducts of functors *)
+Infix "++" := (BinCoproduct_of_functors _ _ _) .
+
+(** The underlying object of V is the initial algebra of the endofunctor
+X ↦ I + H(X) *)
+Check ((fun V hsV ω O cp lcc H st Hωcc => A_is_InitialAlg_sumFI V hsV ω O cp H Hωcc) :
+         ∏ (V : skewmonoidal_precat) hsV
+         ω O cp lcc 
+         H st
+         Hωcc,
+       ((InitialObject (algMonoid_Initial V hsV ω O cp lcc H st Hωcc)
+         : algMonoid st)
+          (** The coercion yields the underlying object of V *)
+        : V) =
+         alg_carrier
+           (constant_functor _ _ (skewmonoidal_precat_unit V) ++ H) (InitialObject
+                (colimAlgInitial _ _ _ _))).
 

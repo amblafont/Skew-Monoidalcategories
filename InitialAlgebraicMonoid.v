@@ -407,6 +407,18 @@ Definition stH : spec_st2 H := make_nat_trans _ _ stH_data stH_is_nat.
 
 Definition G := φ₁ H I.
 
+Definition sumFI :=
+  BinCoproduct_of_functors _ _ bc (constant_functor _ _ I) F.
+
+
+(** Sanity check *)
+Lemma G_is_sumFI :
+  G = sumFI.
+Proof.
+  apply functor_eq; [exact hsV |].
+  apply idpath.
+Qed.
+
 Definition Homega  : is_omega_cocont H.
 Proof.
   use (is_omega_cocont_BinCoproduct_of_functors _ hsV).
@@ -426,6 +438,17 @@ Definition Gomega : is_omega_cocont G := Homega2 I.
 Definition Ai := colimAlgInitial hsV O Gomega (Vch (initChain O G)).
 
 Definition A := alg_carrier _ (InitialObject Ai).
+
+
+Lemma A_is_InitialAlg_sumFI :
+  A = alg_carrier sumFI
+                  (InitialObject (colimAlgInitial hsV O
+                                   (transportf is_omega_cocont G_is_sumFI Gomega)
+                                   (Vch (initChain O sumFI)))).
+Proof.
+  induction G_is_sumFI.
+  apply idpath.
+Qed.
 
 
 (* The algebra structure *)
