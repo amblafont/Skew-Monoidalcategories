@@ -310,7 +310,11 @@ Check ((fun V hsV ω O cp lcc H st Hωcc => A_is_InitialAlg_sumFI V hsV ω O cp 
          : algMonoid st)
           (** The coercion yields the underlying object of V *)
         : V) =
+       (** [alg_carrier F a] takes an F-algebra a and returns the underlying
+           object *)
          alg_carrier
-           (constant_functor _ _ (skewmonoidal_precat_unit V) ++ H) (InitialObject
-                (colimAlgInitial _ _ _ _))).
+           (** here, F = I + H *)
+           (constant_functor _ _ (skewmonoidal_precat_unit V) ++ H)
+           (** and we consider the initial algebra *)
+           (InitialObject (colimAlgInitial _ _ _ _))).
 
