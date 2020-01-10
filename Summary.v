@@ -120,7 +120,7 @@ Check (precategory_IModule V hsV ::=
           (make_precategory_ob_mor (IModule V) (IModule_Mor V)
              ,, _) ,, _ ,, _).
 
-(** We denote M this category in the following *)
+(** We denote by M this category in the following *)
 Notation M := (precategory_IModule V hsV).
 
 (** The forgetful functor from M to V *)
@@ -157,13 +157,12 @@ covered by StructuralStrengths.v
 (** We suppose given an endofunctor H on V *)
 Context  (H : V ⟶ V).
 
-(**
-A structural strength consists of a natural transformation between the two
-relevant  parallel functors from V × M (denoted V ⊠ M below) to V, subject
-to two laws.
+(** A structural strength consists of a natural transformation between
+the two relevant parallel functors from V × M (denoted by V ⊠ M below)
+to V, subject to two laws.
 
-There is an implicit coercion between strengths and natural transformations.
- *)
+There is an implicit coercion between strengths and natural
+transformations.  *)
 Check (strength V hsV H ::=
          ∑ (st : nat_trans (C := V ⊠ M) (C' := V)
                    ((H ×× 𝒰) ∙ tensor)
