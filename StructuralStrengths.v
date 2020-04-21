@@ -20,107 +20,163 @@ Require Import IModules.
 Local Open Scope cat.
 Local Notation "'id' X" := (identity X) (at level 30).
 
-Section A.
-
-Context (V : skewmonoidal_precat).
-
-Context (hsV : has_homsets V).
-Notation I := (skewmonoidal_precat_unit V).
-Notation tensor := (skewmonoidal_precat_tensor V).
-Notation "X ⊗ Y" := (tensor (X , Y)).
-Notation "X ⊗ Y" := (IModule_tensor_functor _ hsV (X, Y))  : module_scope.
-(* Notation "f #⊗ g" := (# (IModule_tensor_functor _ hsV) (f #, g)) : module_scope. *)
-Delimit Scope module_scope with M.
-
-Let M := precategory_IModule V hsV.
-Let IM := (IModule_I V : M).
-Let λM := (IModule_left_unitor V).
-Local Notation ρ' := (skewmonoidal_precat_right_unitor V).
-
-Local Notation "C ⊠ D" := (precategory_binproduct C D) (at level 38).
-Local Notation "( c , d )" := (make_precatbinprod c d).
-Local Notation "( f #, g )" := (precatbinprodmor f g).
-
+Local Notation φ₁ := (functor_fix_fst_arg _ _ _).
+Local Notation φ₂ := (functor_fix_snd_arg _ _ _).
 Local Infix "×" := pair_functor  : functor_scope .
 Delimit Scope functor_scope with F.
 
-Definition strength_data (F : V ⟶ V) : UU :=
-  nat_trans (C := V ⊠ M)(C' := V) ((F × forget_IModules V hsV)%F ∙ tensor)
-            ((functor_identity _ × forget_IModules V hsV)%F ∙ tensor ∙ F).
+Definition strength_data {V : skewmonoidal}(hsV : has_homsets V)(F : V ⟶ V) : UU :=
+  nat_trans (C := V ⊠ precategory_PtIModule V hsV)
+            (C' := V)
+            ((F × forget_PtIModules V hsV)%F ∙ (skewmonoidal_tensor V))
+            ((functor_identity _ × forget_PtIModules V hsV)%F ∙ (skewmonoidal_tensor V) ∙ F).
 
-Identity Coercion strength_data_to_nat_trans : strength_data >-> nat_trans.
-Notation "X #⊗ Y" := (# tensor (X #, Y)) (at level 20).
-Notation α' := (skewmonoidal_precat_associator V).
-Notation λ' := (skewmonoidal_precat_left_unitor V).
+Section A.
 
-Definition strength_laws {F : V ⟶ V} (s : strength_data F) :=
+  Context {V : skewmonoidal} {hsV : has_homsets V}{F : V ⟶ V}
+          (st : strength_data hsV F) .
+
+(* Implicit coercions do not work for reversible notations *)
+Notation tensor := (skewmonoidal_tensor (data_from_skewmonoidal V)).
+Notation I := (skewmonoidal_I (data_from_skewmonoidal V)).
+
+Context (coeqsV : coequalizers.Coequalizers V).
+Context  (tensorl_coeqs : preserves_colimit_of_shape (φ₂ tensor I) coequalizers.Coequalizer_graph ).
+   
+Notation "X ⊗ Y" := (tensor (X , Y)).
+(* TODO: copy this in skew monoids *)
+Notation "f #⊗ g" :=
+   (functor_on_morphisms (functor_data_from_functor _ _ tensor) (f #, g))
+
+                         (at level 31).
+Notation α' := (skewmonoidal_assoc (data_from_skewmonoidal V)).
+Notation λ' := (skewmonoidal_unitl (data_from_skewmonoidal V)).
+Notation ρ' := (skewmonoidal_unitr (data_from_skewmonoidal V)).
+
+Infix "⊠M" := (PtIModule_tensor V hsV coeqsV tensorl_coeqs) (at level 31).
+
+Let M := precategory_PtIModule V hsV.
+Notation PIMod := (PtIModule V hsV).
+Notation IMod := (IModule V hsV).
+Notation IM := (PtIModule_I V hsV).
+Local Notation σ := (im_action _).
+Local Notation αVM := (V_IModules_assoc V hsV coeqsV tensorl_coeqs).
+
+Definition strength_pw (A : V)(B : PIMod) : F A ⊗ B --> F (A ⊗ B) :=
+  (st : nat_trans _ _) (A , (B : M)).
+
+Local Notation s := strength_pw.
+
+Definition strength_ax {A A' B B'}(f : V ⟦A , A'⟧)(g : PtIModule_Mor B B') :
+  # F f #⊗ g · s A' B' = s A B · # F (f #⊗ g) :=
+  nat_trans_ax st _  _ (f #, (g : M ⟦ _, _⟧)).
+
+
+Definition strength_laws :=
   (* triangle *)
-  (∏ (a : V), ρ' (F a) · (s (a, IM))   = # F (ρ' a)) ×
+  (∏ (a : V), ρ' (F a) · s a IM = # F (ρ' a)) ×
  (* pentagon *)
- ( ∏ (a : V), ∏ (x y : IModule _) (z : V)(f : V ⟦ x ⊗ y , z ⟧)
-   (eqf : im_action _ x #⊗ identity y · f = α' ((x , I) , y) · identity x #⊗ λ' y · f)
-  ,
-  (α' ((F a,  x),  y)) · s (a , ((x : ob M) ⊗ (y : ob M))%M)
-                       · # F (identity _ #⊗ f)
+ ( ∏ (a : V), ∏ (x y : PIMod)  ,
+  αVM (F a) x y · s a (x ⊠M y)
   =
-  (s (a, (x : M))) #⊗ (id ( y)) · ( s ((a ⊗  x), (y : M))) · (#F ( α' ((a,  x),  y)))
-                       · # F (identity _ #⊗ f)).
-
-Definition strength (F : V ⟶ V) : UU := ∑ (s : strength_data F), strength_laws s.
-
-Coercion strength_data_from_strength {F : V ⟶ V} (s : strength F)
-  : strength_data F := pr1 s.
-
-
-Definition strength_triangle_eq {F : V ⟶ V} (s : strength F) :
-    ∏ (a : V), ρ' (F a) · (s (a, IM))   = # F (ρ' a)  := pr1 (pr2 s).
-
-Definition strength_pentagon_eq {F : V ⟶ V} (s : strength F) :
-  ∏ (a : V), ∏ (x y : IModule _) (z : V)(f : V ⟦ x ⊗ y , z ⟧)
-   (eqf : im_action _ x #⊗ identity y · f = α' ((x , I) , y) · identity x #⊗ λ' y · f)
-  ,
-  (α' ((F a,  x),  y)) · s (a , ((x : ob M) ⊗ (y : ob M))%M)
-                       · # F (identity a #⊗ f)
-  =
-  (s (a, (x : M))) #⊗ (id ( y)) · ( s ((a ⊗  x), (y : M))) · (#F ( α' ((a,  x),  y)))
-                   · # F (identity a #⊗ f)
-   := pr2 (pr2 s).
-
+  (s a x) #⊗ (id y) ·  s (a ⊗ x) y · #F (αVM a x y)).
 End A.
 
+Coercion strength_pw : strength_data >-> Funclass.
+Definition strength {V : skewmonoidal}(hsV : has_homsets V)(F : V ⟶ V)
+ (coeqsV : coequalizers.Coequalizers V)
+  (tensorl_coeqs : preserves_colimit_of_shape (φ₂ (skewmonoidal_tensor V) (skewmonoidal_I V))
+      coequalizers.Coequalizer_graph)
+  : UU :=
+  ∑ (s : strength_data hsV F), strength_laws s coeqsV tensorl_coeqs.
+
+Coercion data_from_strength {V hsV F coeqsV tensorl_coeqs}
+         (s : @strength V hsV F coeqsV tensorl_coeqs) :
+  strength_data hsV F := pr1 s.
 
 
-Section tensorial.
+Section B.
 
-Context {V : skewmonoidal_precat}.
-Context {hsV : has_homsets V}.
-Context {F : V ⟶ V} (st : strength _ hsV F).
-Notation I := (skewmonoidal_precat_unit V).
-Notation tensor := (skewmonoidal_precat_tensor V).
+  Context {V : skewmonoidal} {hsV : has_homsets V}{F : V ⟶ V}
+          {coeqsV : coequalizers.Coequalizers V}
+          {tensorl_coeqs : preserves_colimit_of_shape
+                             (φ₂ (skewmonoidal_tensor V) (skewmonoidal_I V))
+                             coequalizers.Coequalizer_graph }.
+  Context (s : strength hsV F coeqsV tensorl_coeqs).
+
+Notation tensor := (skewmonoidal_tensor (data_from_skewmonoidal V)).
+Notation I := (skewmonoidal_I (data_from_skewmonoidal V)).
 Notation "X ⊗ Y" := (tensor (X , Y)).
-Notation "X #⊗ Y" := (# tensor (X #, Y)) (at level 20).
-Notation M := (precategory_IModule _ hsV).
+(* TODO: copy this in skew monoids *)
+Notation "f #⊗ g" :=
+   (functor_on_morphisms (functor_data_from_functor _ _ tensor) (f #, g))
 
-(* Definition tensorial_strength_nat   : strength_dom _ hsV _ _ _ ⟹ strength_codom _ hsV _ _  _ := pr1 st. *)
-Definition tensorial_strength_nat_pw (X : V) (Y : M) :
-  V ⟦ F X ⊗ (Y : IModule _) , F (X ⊗ (Y : IModule _)) ⟧ :=
-  st (X , Y).
+                         (at level 31).
+Notation α' := (skewmonoidal_assoc (data_from_skewmonoidal V)).
+Notation λ' := (skewmonoidal_unitl (data_from_skewmonoidal V)).
+Notation ρ' := (skewmonoidal_unitr (data_from_skewmonoidal V)).
 
-Notation τ := tensorial_strength_nat_pw.
+Infix "⊠M" := (PtIModule_tensor V hsV coeqsV tensorl_coeqs) (at level 31).
 
-Notation α := (skewmonoidal_precat_associator V).
-Notation IM := (IModule_I V : M).
-Notation λ_ := (skewmonoidal_precat_left_unitor V).
-Notation ρ := (skewmonoidal_precat_right_unitor V).
-Notation "X ⊗ Y" := (IModule_tensor_functor _ hsV (X, Y))  : module_scope.
-(* Notation "f #⊗ g" := (# (IModule_tensor_functor _ hsV) (f #, g)) : module_scope. *)
-Delimit Scope module_scope with M.
+Let M := precategory_PtIModule V hsV.
+Notation PIMod := (PtIModule V hsV).
+Notation IM := (PtIModule_I V hsV).
+Local Notation σ := (im_action _).
+Local Notation π := (IModule_tensor'_proj V hsV coeqsV tensorl_coeqs).
+Local Notation αVM := (V_IModules_assoc V hsV coeqsV tensorl_coeqs).
 
-(* Definition tensorial_strength_triangle_eq : ∏ (a : V), ρ (F a) · τ a IM   = (#F (ρ a)) := pr1 (pr2 st). *)
-(* Definition tensorial_strength_pentagon_eq :  ∏ (a : V), ∏ (x y : IModule _), *)
-(*   (α ((F a,  x),  y)) · τ a ((x : ob M) ⊗ (y : ob M))%M = *)
-(*   (τ a x) #⊗ (id ( y)) · ( τ (a ⊗  x) y) · (#F ( α ((a,  x),  y))) *)
-(*   := pr2 (pr2 st). *)
+Definition strength_triangle_eq  :
+    ∏ (a : V), ρ' (F a) · s a IM   = # F (ρ' a)  := pr1 (pr2 s).
+
+Definition strength_pentagon_eq :
+   ( ∏ (a : V), ∏ (x y : PIMod)  ,
+  αVM (F a) x y · s a (x ⊠M y)
+  =
+  (s a x) #⊗ (id y) ·  s (a ⊗ x) y · #F (αVM a x y)) := pr2 (pr2 s).
+
+(*
+Lemma strength_pentagon_eq' 
+      {x y : PIMod}{z : V}(f : x ⊗ y --> z) 
+  (eqf : α' x I y · id x #⊗ λ' y · f = σ x #⊗ id y · f)
+      (a : V) :
+  αVM (F a) x y · s a (x ⊠M y) · # F
+      (identity a #⊗ IModule_tensor'_Out_V V hsV coeqsV tensorl_coeqs f eqf)
+  =
+  (s a x) #⊗ (id y) ·  s (a ⊗ x) y · #F (α' a x y · identity a #⊗ f).
+Proof.
+  assert (h := IModule_tensor'_Out_eq V hsV coeqsV tensorl_coeqs f eqf).
+  etrans; revgoals.
+  {
+    repeat rewrite assoc'.
+    do 2 apply cancel_precomposition.
+    (* etrans; revgoals. *)
+    (* { *)
+    (*   apply functor_comp. *)
+    (* } *)
+    etrans; revgoals.
+    {
+      apply maponpaths.
+      etrans; revgoals.
+      {
+        apply cancel_precomposition.
+        etrans; revgoals.
+        {
+          eapply (maponpaths (# (φ₁ tensor a))).
+          exact h.
+        }
+        apply pathsinv0, (functor_comp (φ₁ tensor a)).
+      }
+      apply assoc'.
+    }
+    apply pathsinv0, functor_comp.
+    
+
+  }
+  repeat rewrite assoc.
+  apply cancel_postcomposition.
+  apply  strength_pentagon_eq.
+Qed.
+*)
 
 Local Notation η := (sm_unit _).
 Local Notation μ := (sm_mult _).
@@ -136,13 +192,15 @@ Definition am_alg (X : algMonoid_data) : F X --> X := pr2 X.
 Local Notation κ := am_alg.
 
 Definition algMonoid := ∑ (X : algMonoid_data), 
-  (pr1 st : nat_trans _ _) (X , (IModule_from_monoid _ X : M)) · # F (μ X) · κ X =
+  s X (PtIModule_from_monoid _ _ X ) · # F (μ X) · κ X =
            κ X #⊗ identity X · (μ X).
 
 Coercion algMonoid_data_from_algMonoid (X : algMonoid) : algMonoid_data := pr1 X.
+
 Definition algMonoid_algeq (X : algMonoid) : 
-  (pr1 st : nat_trans _ _) (X , (IModule_from_monoid _ X : M)) · # F (μ X) · κ X =
-           κ X #⊗ identity X · (μ X) := pr2 X.
+  s X (PtIModule_from_monoid _ _ X ) · # F (μ X) · κ X =
+           κ X #⊗ identity X · (μ X)
+            := pr2 X.
 
 
 Definition algMonoid_Mor (X Y : algMonoid_data) :=
@@ -195,11 +253,8 @@ Proof.
     exact hs.
 Defined.
 
-Definition precategory_algMonoid_ob_mor  : precategory_ob_mor.
-Proof.
-  exists algMonoid.
-  exact (λ T T' : algMonoid , algMonoid_Mor T T').
-Defined.
+Definition precategory_algMonoid_ob_mor  : precategory_ob_mor :=
+   make_precategory_ob_mor algMonoid (λ T T' : algMonoid , algMonoid_Mor T T').
 
 Definition precategory_algMonoid_data : precategory_data.
 Proof.
@@ -225,4 +280,4 @@ Qed.
 Definition precategory_algMonoid : precategory
   := tpair _ _ precategory_algMonoid_axioms.
 
-End tensorial.
+End B.

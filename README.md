@@ -10,8 +10,8 @@ The UniMath library is required with at least the following packages:
 Foundations, MoreFoundations, CategoryTheory, and Tactics.
 
 This was tested with:
-- Coq 8.10
-- UniMath commit version 9e1009089faa45c7cfbae3520df8bb7c5927d4ed.
+- Coq 8.11
+- UniMath commit version 93c0bd5ce1cc597d0298540eec6f3791b7e2b5cb.
 
 ## Summary 
 

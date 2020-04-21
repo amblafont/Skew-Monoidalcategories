@@ -22,13 +22,22 @@ Notation "C ⊠ D" := (precategory_binproduct C D) (at level 38).
 Notation "( c , d )" := (make_precatbinprod c d).
 Notation "( f #, g )" := (precatbinprodmor f g).
 
+
 Section Skewmonoidal_precat.
 
 Context {C : precategory} (tensor : C ⊠ C ⟶ C) (I : C).
 
 Notation "X ⊗ Y" := (tensor (X, Y)).
-Notation "f #⊗ g" := (#tensor (f #, g)) (at level 31).
+(* Implicit coercions do not work for reversible notations *)
+Notation "f #⊗ g" := (#
+                       (functor_data_from_functor
+                          (precategory_data_from_precategory
+                             (C ⊠ C))
+                          (precategory_data_from_precategory C)
+                          tensor)
+                         (f #, g)) (at level 31).
 
+(* TODO: inutile *)
 Definition tensor_id {X Y : C} : id X #⊗ id Y = id (X ⊗ Y).
 Proof.
   rewrite binprod_id.
@@ -50,172 +59,133 @@ Proof.
   exact (functor_on_is_iso_is_iso (is_iso_binprod_iso f_is_iso g_is_iso)).
 Defined.
 
-(* I ⊗ - *)
-Definition I_pretensor : C ⟶ C := functor_fix_fst_arg _ _ _ tensor I.
-
-Lemma I_pretensor_ok: functor_on_objects I_pretensor = λ c, I ⊗ c.
-Proof.
-  apply idpath.
-Qed.
-
-(* λ *)
-Definition left_unitor : UU := nat_trans I_pretensor (functor_identity C).
-
-Identity Coercion left_unitor_nat : left_unitor >-> nat_trans.
-
-(* - ⊗ I *)
-Definition I_posttensor : C ⟶ C := functor_fix_snd_arg _ _ _ tensor I.
-
-Lemma I_posttensor_ok: functor_on_objects I_posttensor = λ c, c ⊗ I.
-Proof.
-  apply idpath.
-Qed.
-
-(* ρ *)
-Definition right_unitor : UU :=
-  nat_trans (functor_identity C) I_posttensor .
-
-Identity Coercion right_unitor_nat : right_unitor >-> nat_trans.
-
-(* (- ⊗ =) ⊗ ≡ *)
-Definition assoc_left : (C ⊠ C) ⊠ C ⟶ C :=
-  functor_composite (pair_functor tensor (functor_identity _)) tensor.
-
-
-Lemma assoc_left_ok: functor_on_objects assoc_left =
-  λ c, (ob1 (ob1 c) ⊗ ob2 (ob1 c)) ⊗ ob2 c.
-Proof.
-  apply idpath.
-Qed.
-
-(* - ⊗ (= ⊗ ≡) *)
-Definition assoc_right : (C ⊠ C) ⊠ C ⟶ C :=
-  functor_composite
-    (precategory_binproduct_unassoc _ _ _)
-    (functor_composite (pair_functor (functor_identity _) tensor) tensor).
-
-Lemma assoc_right_ok: functor_on_objects assoc_right =
-  λ c, ob1 (ob1 c) ⊗ (ob2 (ob1 c) ⊗ ob2 c).
-Proof.
-  apply idpath.
-Qed.
-
-(* α *)
-Definition associator : UU :=
-  nat_trans assoc_left assoc_right.
-
-Identity Coercion associator_nat : associator >-> nat_trans.
-
-(* This definition goes in the opposite direction of that by Mac Lane (CWM 2nd ed., p.162)
-   but conforms to the def. on Wikipedia. *)
-
-Definition rho_lambda_eq (λ' : left_unitor) (ρ' : right_unitor) : UU :=
-  ρ' I · λ' I = id I.
-
-Definition triangle_eq (λ' : left_unitor) (ρ' : right_unitor) (α' : associator) : UU :=
-   ∏ (a b : C), id (a ⊗ b) = pr1 ρ' a #⊗ id b  · pr1 α' ((a, I), b) · id a #⊗ pr1 λ' b .
-
-Definition alpha_lambda_eq (λ' : left_unitor) (ρ' : right_unitor) (α' : associator) : UU :=
-   ∏ (a b : C), α' ((I, a), b) · λ' (a ⊗ b) = λ' a #⊗ id b.
-
-Definition rho_alpha_eq (λ' : left_unitor) (ρ' : right_unitor) (α' : associator) : UU :=
-   ∏ (a b : C), ρ' (a⊗b) · α' ((a,b),I) = id a #⊗ ρ' b.
-
-Definition pentagon_eq (α' : associator) : UU :=
-  ∏ (a b c d : C), pr1 α' ((a ⊗ b, c), d) · pr1 α' ((a, b), c ⊗ d) =
-   pr1 α' ((a, b), c) #⊗ id d · pr1 α' ((a, b ⊗ c), d) · id a #⊗ pr1 α' ((b, c), d).
-
-
 End Skewmonoidal_precat.
 
-Definition skewmonoidal_precat : UU :=
-  ∑ C : precategory, ∑ tensor : C ⊠ C ⟶ C, ∑ I : C,
-  ∑ λ' : left_unitor tensor I,
-  ∑ ρ' : right_unitor tensor I,
-  ∑ α' : associator tensor,
-         (rho_lambda_eq tensor I λ' ρ') × (triangle_eq tensor I λ' ρ' α') ×
-      (alpha_lambda_eq tensor I λ' ρ' α') × (rho_alpha_eq tensor I λ' ρ' α') ×
-                               (pentagon_eq tensor α') .
+Local Notation φ₁ := (functor_fix_fst_arg _ _ _).
+Local Notation φ₂ := (functor_fix_snd_arg _ _ _).
+
+Local Declare Scope functor_scope.
+Local Infix "×" := pair_functor  : functor_scope .
+Delimit Scope functor_scope with F.
+
+Definition skewmonoidal_data : UU :=
+  ∑ (V : precategory)(tensor : V ⊠ V ⟶ V) (I : V),
+        (* left unitor *) φ₁ tensor I   ⟹ functor_identity V ×
+        (* right unitor *) functor_identity V ⟹ φ₂ tensor I ×
+        (* associator *) (tensor × (functor_identity _))%F ∙ tensor ⟹
+                             (precategory_binproduct_unassoc _ _ _)
+                             ∙ (functor_identity V × tensor)%F ∙ tensor .
+
+Coercion precat_from_skewmonoidal (V : skewmonoidal_data) : precategory := pr1 V.
+
+Definition skewmonoidal_tensor (V : skewmonoidal_data) :
+   V ⊠ V ⟶ V := pr1 (pr2 V).
+
+Definition skewmonoidal_I (V : skewmonoidal_data) :
+    V := pr1 (pr2 (pr2 V)).
+
+Local Notation tensor := (skewmonoidal_tensor _).
+Local Notation I := (skewmonoidal_I _).
+
+Local Notation "X ⊗ Y" := (tensor (X, Y)).
+(* Implicit coercions do not work for reversible notations *)
+Local Notation "f #⊗ g" := (#
+                      (functor_data_from_functor
+                          (precategory_data_from_precategory
+                            ((precat_from_skewmonoidal _) ⊠ (precat_from_skewmonoidal _)))
+                          (precategory_data_from_precategory (precat_from_skewmonoidal _))
+                          tensor)
+                        (f #, g)) (at level 31).
+
+Local Notation nts := (pr2 (pr2 (_ : skewmonoidal_data))) .
+
+Definition skewmonoidal_unitl_nt (V : skewmonoidal_data) :
+  φ₁ tensor I  ⟹ functor_identity V :=
+  pr1 (pr2 nts).
 
 
-Definition skewmonoidal_precat_struct : UU :=
-  ∑ C : precategory, ∑ tensor : C ⊠ C ⟶ C, ∑ I : C,
-  ∑ λ' : left_unitor tensor I,
-  ∑ ρ' : right_unitor tensor I,
-  ∑ α' : associator tensor, unit.
+Definition skewmonoidal_unitl (V : skewmonoidal_data) (x : V) :
+  I ⊗ x --> x := skewmonoidal_unitl_nt V x.
 
-Definition mk_skewmonoidal_precat_struct (C: precategory)(tensor: C ⊠ C ⟶ C)(I: C)
-  (λ': left_unitor tensor I)(ρ': right_unitor tensor I)(α': associator tensor): skewmonoidal_precat_struct :=
-  (C,, (tensor,, (I,, (λ',, (ρ',, (α',, tt)))))).
+Local Notation λ' := (skewmonoidal_unitl _).
 
-Definition mk_skewmonoidal_precat (C: precategory)(tensor: C ⊠ C ⟶ C)(I: C)
-  (λ': left_unitor tensor I)(ρ': right_unitor tensor I)(α': associator tensor)
-         (eq1 : rho_lambda_eq tensor I λ' ρ') (eq2 : triangle_eq tensor I λ' ρ' α')
-      (eq3 : alpha_lambda_eq tensor I λ' ρ' α')  (eq4 : rho_alpha_eq tensor I λ' ρ' α')
-                               (eq5 : pentagon_eq tensor α')
-  : skewmonoidal_precat :=
-  (C,, tensor,, I,, λ',, ρ',, α',, eq1,, eq2 ,, eq3 ,, eq4 ,, eq5).
-
-Section Skewmonoidal_precat_Accessors.
+Definition skewmonoidal_unitl_ax (V : skewmonoidal_data) {x y : V} (f : x --> y) :
+  (identity I) #⊗ f · λ' y = λ' x · f
+  := nat_trans_ax (skewmonoidal_unitl_nt V) _ _ f.
 
 
-Coercion skewmonoidal_precat_precat (M : skewmonoidal_precat) := pr1 M.
-(* Notation V := skewmonoidal_precat_precat. *)
-Context (M : skewmonoidal_precat).
-Notation V := M.
+Definition skewmonoidal_unitr_nt (V : skewmonoidal_data) :
+         functor_identity V ⟹ φ₂ tensor I := pr1 (pr2 (pr2 nts)).
 
-Definition skewmonoidal_precat_tensor : V ⊠ V ⟶ V := pr1 (pr2 M).
-Notation tensor := skewmonoidal_precat_tensor.
+Definition skewmonoidal_unitr (V : skewmonoidal_data) (x : V) :
+  x --> x ⊗ I := skewmonoidal_unitr_nt V x.
 
-Definition skewmonoidal_precat_unit : V := pr1 (pr2 (pr2 M)).
-Notation I := skewmonoidal_precat_unit.
+Local Notation ρ' := (skewmonoidal_unitr _).
 
-Definition skewmonoidal_precat_left_unitor : left_unitor tensor I := pr1 (pr2 (pr2 (pr2 M))).
-Notation λ' := skewmonoidal_precat_left_unitor.
+Definition skewmonoidal_unitr_ax (V : skewmonoidal_data) {x y : V} (f : x --> y) :
+  f · ρ' y = ρ' x · f #⊗ identity I
+  := nat_trans_ax (skewmonoidal_unitr_nt V) _ _ f.
 
 
-Definition skewmonoidal_precat_right_unitor : right_unitor tensor I := pr1 (pr2 (pr2 (pr2 (pr2 M)))).
-Notation ρ' := skewmonoidal_precat_right_unitor.
 
-Definition skewmonoidal_precat_associator : associator tensor := pr1 (pr2 (pr2 (pr2 (pr2 (pr2 M))))).
-Notation α' := skewmonoidal_precat_associator.
+Definition skewmonoidal_assoc_nt (V : skewmonoidal_data) :
+         (tensor × (functor_identity _))%F ∙ tensor ⟹
+                             (precategory_binproduct_unassoc _ _ _)
+                             ∙ (functor_identity V × tensor)%F ∙ tensor
+                             := pr2 (pr2 (pr2 nts)).
 
-Definition skewmonoidal_precat_eq :
-         (rho_lambda_eq tensor I λ' ρ') × (triangle_eq tensor I λ' ρ' α') ×
-      (alpha_lambda_eq tensor I λ' ρ' α') × (rho_alpha_eq tensor I λ' ρ' α') ×
-                               (pentagon_eq tensor α')
-  := pr2 (pr2 (pr2 (pr2 (pr2 (pr2 M))))).
-Notation eq := skewmonoidal_precat_eq.
+Definition skewmonoidal_assoc (V : skewmonoidal_data) (x y z : V) :
+  x ⊗ y ⊗ z --> x ⊗ (y ⊗ z) := skewmonoidal_assoc_nt V ((x , y) , z).
 
-Definition skewmonoidal_precat_rho_lambda_eq :  rho_lambda_eq tensor I λ' ρ' := pr1 eq.
-Definition skewmonoidal_precat_triangle_eq : triangle_eq tensor I λ' ρ' α' := pr1 (pr2 eq).
-Definition skewmonoidal_precat_alpha_lambda_eq : alpha_lambda_eq tensor I λ' ρ' α' := pr1 (pr2 (pr2 eq)).
-Definition skewmonoidal_precat_rho_alpha_eq : rho_alpha_eq tensor I λ' ρ' α' := pr1 (pr2 (pr2 (pr2 eq))).
-Definition skewmonoidal_precat_pentagon_eq : pentagon_eq tensor α' :=  (pr2 (pr2 (pr2 (pr2 eq)))).
+Local Notation α' := (skewmonoidal_assoc _).
 
-Notation "f #⊗ g" := (#tensor (f #, g)) (at level 31).
+Definition skewmonoidal_assoc_ax (V : skewmonoidal_data)
+           {x x' y y' z z' : V} (f : x --> x')(g : y --> y')(h : z --> z') :
+  ((f #⊗ g) #⊗ h) · α' x' y' z' = α' x y z · (f #⊗ (g #⊗ h))
+  := nat_trans_ax (skewmonoidal_assoc_nt V) _ _ ((f #, g) #, h).
 
-Lemma I_mult_laws : α' ((I,, I),, I) · identity I #⊗ λ' I · λ' I = λ' I #⊗ identity I · λ' I.
+
+Definition skewmonoidal : UU :=
+  ∑ (V : skewmonoidal_data),
+  ρ' I · λ' I = identity (C := V) I ×
+   (∏ (a b : V), ρ' a #⊗ id b  · α' a I b · id a #⊗  λ' b = id (a ⊗ b)) × 
+   (∏ (a b : V), α' I a b · λ' (a ⊗ b) = λ' a #⊗ id b) ×
+   (∏ (a b : V), ρ' (a⊗b) · α' a b I = id a #⊗ ρ' b) ×
+   (∏ (a b c d : V), α' (a ⊗ b) c d · α' a b (c ⊗ d) =
+                     α' a b c #⊗ id d · α' a (b ⊗ c)  d ·
+                         id a #⊗ α' b c d).
+
+Coercion data_from_skewmonoidal (V : skewmonoidal) : skewmonoidal_data := pr1 V.
+
+Local Notation eq := (pr2 (_ : skewmonoidal)).
+
+Definition skewmonoidal_rho_lambda_eq (V : skewmonoidal) : ρ' I · λ' I = identity (C := V) I :=
+   pr1 eq.
+Definition skewmonoidal_triangle_eq (V : skewmonoidal) :
+  ∏ (a b : V), ρ' a #⊗ id b  · α' a I b · id a #⊗  λ' b = id (a ⊗ b)  
+  := pr1 (pr2 eq).
+Definition skewmonoidal_alpha_lambda_eq (V : skewmonoidal) :
+  ∏ (a b : V), α' I a b · λ' (a ⊗ b) = λ' a #⊗ id b := pr1 (pr2 (pr2 eq)).
+
+Definition skewmonoidal_rho_alpha_eq (V : skewmonoidal) :
+  ∏ (a b : V), ρ' (a⊗b) · α' a b I = id a #⊗ ρ' b := pr1 (pr2 (pr2 (pr2 eq))).
+Definition skewmonoidal_pentagon_eq (V : skewmonoidal) :
+  ∏ (a b c d : V), α' (a ⊗ b) c d · α' a b (c ⊗ d) =
+                     α' a b c #⊗ id d · α' a (b ⊗ c)  d ·
+                         id a #⊗ α' b c d
+  :=  (pr2 (pr2 (pr2 (pr2 eq)))).
+
+Lemma I_mult_laws (V : skewmonoidal) (X : V) : α' I I X · identity (C := V) I #⊗ λ' X · λ' X = λ' I #⊗ identity X · λ' X.
 Proof.
    etrans.
     {
       etrans;[apply pathsinv0,assoc|].
       apply cancel_precomposition.
-      apply (nat_trans_ax λ').
+      apply skewmonoidal_unitl_ax.
     }
     rewrite assoc.
     apply cancel_postcomposition.
-    apply skewmonoidal_precat_alpha_lambda_eq.
+    apply skewmonoidal_alpha_lambda_eq.
 Qed.
 
-End Skewmonoidal_precat_Accessors.
 
-(* Definition strict_skewmonoidal_precat : UU := *)
-(*   ∑ M : skewmonoidal_precat, *)
-(*   ∏ (eq_λ : I_pretensor (skewmonoidal_precat_tensor M) (skewmonoidal_precat_unit M) = *)
-(*   functor_identity (pr1 M)), *)
-(*   ∏ (eq_ρ : I_posttensor (skewmonoidal_precat_tensor M) (skewmonoidal_precat_unit M) = *)
-(*   functor_identity (pr1 M)), *)
-(*   ∏ (eq_α : assoc_left (skewmonoidal_precat_tensor M) = *)
-(*   assoc_right (skewmonoidal_precat_tensor M)), *)
-(*   is_strict (skewmonoidal_precat_tensor M) (skewmonoidal_precat_unit M) eq_λ (skewmonoidal_precat_left_unitor M) eq_ρ (skewmonoidal_precat_right_unitor M) eq_α (skewmonoidal_precat_associator M). *)

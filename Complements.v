@@ -18,10 +18,12 @@ Require Import UniMath.CategoryTheory.Chains.Adamek.
 Require Import UniMath.CategoryTheory.Chains.OmegaCocontFunctors.
 Require Import UniMath.CategoryTheory.limits.graphs.colimits.
 Require Import UniMath.CategoryTheory.limits.graphs.bincoproducts.
+Require Import UniMath.CategoryTheory.limits.graphs.coequalizers.
 Require Import UniMath.CategoryTheory.limits.bincoproducts.
 Require Import UniMath.CategoryTheory.limits.initial.
 Require Import UniMath.CategoryTheory.limits.graphs.eqdiag.
 Require Import UniMath.CategoryTheory.FunctorAlgebras.
+Require Import UniMath.CategoryTheory.coslicecat.
 
 
 Local Open Scope cat.
@@ -137,6 +139,43 @@ Proof.
     rewrite BinCoproductOfArrowsIn2.
     apply assoc.
 Qed.
+
+Definition CoequalizerOfArrows {C : precategory}
+           {a a' b b' : C} {f g : a --> b}
+           {f' g' : a' --> b'}
+           (cfg : Coequalizer _ f g) 
+           (cfg' : Coequalizer _ f' g')
+           (u : a --> a')
+           (v : b --> b')
+           (eqf : f · v = u · f')
+           (eqg : g · v = u · g')
+           :
+          CoequalizerObject _ cfg --> CoequalizerObject _ cfg'.
+Proof.
+  unshelve eapply CoequalizerOut.
+  - refine (v · _).
+    apply CoequalizerArrow.
+  -  abstract (rewrite ! assoc, eqf , eqg, ! assoc' ;
+     apply cancel_precomposition, CoequalizerArrowEq).
+Defined.
+
+Lemma CoequalizerOfArrowsEq
+ {C : precategory}
+           {a a' b b' : C} {f g : a --> b}
+           {f' g' : a' --> b'}
+           (cfg : Coequalizer _ f g) 
+           (cfg' : Coequalizer _ f' g')
+           (u : a --> a')
+           (v : b --> b')
+           (eqf : f · v = u · f')
+           (eqg : g · v = u · g')
+           :
+             CoequalizerArrow _ cfg · CoequalizerOfArrows cfg cfg' u v eqf eqg  =
+             v · CoequalizerArrow _ cfg'.
+Proof.
+  apply  CoequalizerArrowComm.
+Qed.
+
 
 Lemma binprod_functor_combine_morphisms {C D E : precategory} (F : C ⊠ D ⟶ E)
       {c c'} (f : C ⟦ c , c' ⟧)
@@ -290,6 +329,20 @@ Proof.
   - intros ??; use empty_rect.
 Defined.
 
+Lemma mapdiagram_coequalizer_eqdiag {C : precategory}{D : category}
+      (F : functor C D){a b : C}(f g : a --> b)  :
+  eq_diag (C := D)
+          (mapdiagram F (coequalizers.Coequalizer_diagram _ f g))
+          (coequalizers.Coequalizer_diagram _ (# F f) (# F g)).
+Proof.
+  use tpair.
+  -  use StandardFiniteSets.two_rec_dep; cbn; apply idpath.
+  -  use StandardFiniteSets.two_rec_dep;  use StandardFiniteSets.two_rec_dep;
+       try exact (empty_rect _ ).
+     intro e.
+     induction e; apply idpath.
+Defined.
+
 Definition coconeeq {C : precategory} (hsC : has_homsets C) {g : graph}{d:  diagram g C}{x : C}
            (cc1 cc2 : cocone d x)
            (eqin : ∏ g, coconeIn cc1 g = coconeIn cc2 g)  : cc1 = cc2.
@@ -385,3 +438,20 @@ Proof.
   exact (initial.isInitial_Initial h).
 Qed.
 
+(* TODO: upload in UniMath coslicecat *)
+Section coslice_precat_theory.
+
+Context {C : precategory}  (x : C)(sets : ∏ y, isaset (x --> y)).
+
+Local Notation "X / C" := (coslice_precat C X sets).
+(** The forgetful functor from C/x to C *)
+Definition coslicecat_to_cat : (x / C) ⟶ C.
+Proof.
+  use make_functor.
+  + use tpair.
+    - apply pr1.
+    - intros a b; apply pr1.
+  + abstract ( split; [intro; apply idpath | red; intros; apply idpath] ).
+Defined.
+
+End coslice_precat_theory.
