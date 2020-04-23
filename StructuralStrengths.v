@@ -47,8 +47,8 @@ Notation "X ⊗ Y" := (tensor (X , Y)).
 (* TODO: copy this in skew monoids *)
 Notation "f #⊗ g" :=
    (functor_on_morphisms (functor_data_from_functor _ _ tensor) (f #, g))
-
                          (at level 31).
+
 Notation α' := (skewmonoidal_assoc (data_from_skewmonoidal V)).
 Notation λ' := (skewmonoidal_unitl (data_from_skewmonoidal V)).
 Notation ρ' := (skewmonoidal_unitr (data_from_skewmonoidal V)).

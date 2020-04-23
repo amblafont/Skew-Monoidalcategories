@@ -1526,40 +1526,27 @@ Definition A_monoid : skewMonoid V :=
 Definition AM' := PtIModule_from_monoid V hsV A_monoid.
 
 (* More useful for path induction *)
-(* Lemma AM_eq' : ((pr2 (pr1 AM) ,, pr2 AM) : ∑ (dt : A ⊗ I --> A × I --> A) , *)
-(*                                            IModule_laws _ (A ,, dt)) = *)
-(*                ((pr2 (pr1 AM') ,, pr2 AM') : ∑ (dt : A ⊗ I --> A × I --> A) , *)
-(*                                              IModule_laws _ (A ,, dt)). *)
-(*
-Lemma AM_eq' : ((pr2 (pr1 AM) ,, pr2 AM) : ∑ (dt : A ⊗ I --> A) ,
-                                           IModule_laws _ (make_IModule_data _ A dt)) =
-               ((pr2 (pr1 AM') ,, pr2 AM') : ∑ (dt : A ⊗ I --> A) ,
-                                             IModule_laws _ (A ,, dt)).
+Lemma AM_eq' :
+  tpair  (T := A ⊗ I --> A) (fun dt => IModule_laws _ (make_IModule_data _ A dt))
+  (σ AM)  (pr2 (AM : IModule V))
+  (* (pr2 (pr1 AM))  (pr2 AM)  *)
+  =
+  tpair  (T := A ⊗ I --> A) (fun dt => IModule_laws _ (make_IModule_data _ A dt))
+               (σ  AM')  (pr2 (AM' : IModule V)) .
 Proof.
   apply subtypePairEquality'.
-  - apply dirprodeq.
-    + exact (! Aunitr_aux).
-    + apply idpath.
+  - exact (! Aunitr_aux).
   - apply isaprop_IModule_laws.
     exact hsV.
 Qed.
-*)
 
-(*
 Definition maponpaths_AM (P : V -> UU)(Q : ∏ (x : IModule V) , P x) : Q AM = Q AM'
    := transportb
-         (X := ∑ (dt : A ⊗ I --> A × I --> A) , IModule_laws _ (A ,, dt))
-      (fun z => Q ((A ,, pr1 z) ,, pr2 z) = Q AM') AM_eq' (idpath _).
-*)
+         (X := ∑ (dt : A ⊗ I --> A) , IModule_laws _ (make_IModule_data _ A dt))
+      (fun z => Q ((make_IModule_data _ A (pr1 z)) ,, pr2 z) = Q AM') AM_eq' (idpath _).
 
-Definition AM_eq : AM = AM'.
-  Admitted.
-  (*
-
-    := maponpaths_AM
-                                 (fun z => _) ( fun z => z) .
-*)
-  
+Definition AM_eq : (AM : IModule V) = (AM' : IModule V) :=
+     maponpaths_AM (fun z => _) (fun z => z).
 
 Local Notation η := (sm_unit _).
 Local Notation μ := (sm_mult _).

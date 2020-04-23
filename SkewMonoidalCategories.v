@@ -29,13 +29,10 @@ Context {C : precategory} (tensor : C ⊠ C ⟶ C) (I : C).
 
 Notation "X ⊗ Y" := (tensor (X, Y)).
 (* Implicit coercions do not work for reversible notations *)
-Notation "f #⊗ g" := (#
-                       (functor_data_from_functor
-                          (precategory_data_from_precategory
-                             (C ⊠ C))
-                          (precategory_data_from_precategory C)
-                          tensor)
-                         (f #, g)) (at level 31).
+Notation "f #⊗ g" :=
+   (functor_on_morphisms (functor_data_from_functor _ _ tensor) (f #, g))
+
+                         (at level 31).
 
 (* TODO: inutile *)
 Definition tensor_id {X Y : C} : id X #⊗ id Y = id (X ⊗ Y).

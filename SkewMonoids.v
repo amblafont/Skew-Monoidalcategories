@@ -10,6 +10,8 @@ Require Import SkewMonoidalCategories.
 
 Local Open Scope cat.
 
+Local Notation "( c , d )" := (make_precatbinprod c d).
+
 Section Precategory_of_SkewMonoids.
 
 Context (V : skewmonoidal).
@@ -17,14 +19,10 @@ Context (V : skewmonoidal).
 Notation tensor := (skewmonoidal_tensor V).
 Notation I := (skewmonoidal_I V).
 Notation "X ⊗ Y" := (tensor (X , Y)).
-(* Implicit coercions do not work for reversible notations *)
-Notation "f #⊗ g" := (#
-                      (functor_data_from_functor
-                          (precategory_data_from_precategory
-                            ((precat_from_skewmonoidal _) ⊠ (precat_from_skewmonoidal _)))
-                          (precategory_data_from_precategory (precat_from_skewmonoidal _))
-                          tensor)
-                        (f #, g)) (at level 31).
+Notation "f #⊗ g" :=
+   (functor_on_morphisms (functor_data_from_functor _ _ tensor) (f #, g))
+
+                         (at level 31).
 Notation α' := (skewmonoidal_assoc (data_from_skewmonoidal V)).
 Notation λ' := (skewmonoidal_unitl (data_from_skewmonoidal V)).
 Notation ρ' := (skewmonoidal_unitr (data_from_skewmonoidal V)).
