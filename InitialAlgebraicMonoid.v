@@ -21,12 +21,12 @@ Require Import UniMath.CategoryTheory.limits.initial.
 Require Import UniMath.CategoryTheory.limits.graphs.eqdiag.
 Require Import UniMath.CategoryTheory.FunctorAlgebras.
 Require Import UniMath.CategoryTheory.FunctorCategory.
+Require Import UniMath.CategoryTheory.SkewMonoidal.SkewMonoidalCategories.
+Require Import UniMath.CategoryTheory.SkewMonoidal.CategoriesOfMonoids.
 
-Require Import SkewMonoidalCategories.
 Require Import StructuralStrengths.
 Require Import IModules.
 Require Import Complements.
-Require Import SkewMonoids.
 
 Local Open Scope cat.
 
@@ -37,6 +37,9 @@ Local Notation "'π₁'" := (pr1_functor _ _) : functor_scope.
 Local Notation "'π₂'" := (pr2_functor _ _) : functor_scope.
 Delimit Scope functor_scope with F.
 
+Local Notation "( c , d )" := (make_precatbinprod c d).
+Local Notation "( f #, g )" := (precatbinprodmor f g).
+Local Notation "C ⊠ D" := (precategory_binproduct C D) (at level 38).
 Local Infix "+" := (BinCoproductOfArrows _ _ _) : morphism_scope.
 
 Local Notation ι₁ := (BinCoproductIn1 _ _).
@@ -51,7 +54,7 @@ Local Notation φ₂ := (functor_fix_snd_arg _ _ _).
 
 
 Section A.
-Context (V : skewmonoidal).
+Context (V : skewmonoidal_precategory).
 (* homsets *)
 Context (hsV : has_homsets V).
 
@@ -113,13 +116,12 @@ Notation pM_V := (forget_PtIModules _ hsV).
 (** _ ⊗ X is omega cocontinuous *)
 Context (ltensor_cc : ∏ (X : V) , is_cocont (φ₂ tensor X)).
 
-Lemma tensorl_coeqs : preserves_colimit_of_shape (φ₂ tensor I)
+Lemma tensorl_coeqs : preserves_colimits_of_shape (φ₂ tensor I)
                                                  coequalizers.Coequalizer_graph.
 Proof.
   red.
   intros.
   eapply ltensor_cc.
-  apply isColimCocone_from_ColimCocone.
 Qed.
 
 
@@ -176,7 +178,7 @@ Lemma bc_id_tensor {a b c d : V} (ccab : BinCoproduct _ a b) (f : V ⟦ c , d �
   identity ccab #⊗ f = BinCoproductOfArrows  _ (tensor_left_bp_gen ccab _)
                                              (tensor_left_bp_gen ccab _) (identity _ #⊗ f)(identity _ #⊗ f).
 Proof.
-  etrans;[eapply (maponpaths (fun z => z #⊗ _)), BinCoproductOfIdentities|].
+  etrans;[eapply (maponpaths (fun z => z #⊗ _)), pathsinv0, BinCoproductOfIdentities|].
   apply BinCoproductOfArrows_tensor.
 Qed.
 
@@ -377,7 +379,7 @@ Proof.
 Qed.
 
 
-Context (F : V ⟶ V) (st : strength hsV F coeqsV tensorl_coeqs) (Fomega: is_omega_cocont F).
+Context (F : V ⟶ V) (st : strength hsV coeqsV tensorl_coeqs F) (Fomega: is_omega_cocont F).
 
 Infix "⊠M" := (PtIModule_tensor V hsV coeqsV tensorl_coeqs) (at level 31).
 Infix "⊗M'" := (IModule_tensor' V hsV coeqsV tensorl_coeqs) (at level 31).
@@ -428,11 +430,11 @@ Proof.
   cbn.
   (* unfold BinCoproduct_of_functors_ob, pr1_functor,pr2_functor, BinCoproduct_of_functors_mor,stH_data; cbn. *)
   etrans;[apply cancel_postcomposition,BinCoproductOfArrows_tensor|].
-  etrans;[apply (BinCoproductOfArrows_comp' (tensor_left_bp _ _ _) (tensor_left_bp _ _ _)  )|].
+  etrans;[apply (BinCoproductOfArrows_comp' _ (tensor_left_bp _ _ _) (tensor_left_bp _ _ _)  )|].
   etrans; revgoals.
   {
     apply pathsinv0.
-    apply (BinCoproductOfArrows_comp' (tensor_left_bp _ _ _)  ).
+    apply (BinCoproductOfArrows_comp' _ (tensor_left_bp _ _ _)  ).
   }
   apply map_on_two_paths.
   - rewrite id_left,id_right.
@@ -504,7 +506,7 @@ Proof.
   unfold stH_data,BinCoproduct_of_functors_mor.
   cbn -[A].
   apply pathsinv0.
-  etrans;[apply (BinCoproductOfArrows_comp' (tensor_left_bp _ _ _))|].
+  etrans;[apply (BinCoproductOfArrows_comp' _ (tensor_left_bp _ _ _))|].
   cbn.
   now rewrite id_right.
 Qed.
@@ -636,9 +638,9 @@ Proof.
         apply cancel_postcomposition.
         apply BinCoproductOfArrows_tensor.
       }
-      eapply   (BinCoproductOfArrows_comp' (tensor_left_bp_gen (tensor_left_bp_gen _ _) _) (tensor_left_bp_gen _ _)).
+      eapply   (BinCoproductOfArrows_comp' _ (tensor_left_bp_gen (tensor_left_bp_gen _ _) _) (tensor_left_bp_gen _ _)).
     }
-    eapply   (BinCoproductOfArrows_comp' (tensor_left_bp_gen (tensor_left_bp_gen _ _) _) ).
+    eapply   (BinCoproductOfArrows_comp' _ (tensor_left_bp_gen (tensor_left_bp_gen _ _) _) ).
   }
   etrans;[apply (precompWithBinCoproductArrow _ (tensor_left_bp_gen (tensor_left_bp_gen _ _) _))|].
   eapply map_on_two_paths; [|apply idpath].
@@ -1060,7 +1062,7 @@ Proof.
   unfold A_action_aux.
   rewrite assoc.
   apply cancel_postcomposition.
-  etrans;[use   (BinCoproductOfArrows_comp' (tensor_left_bp _ _ _))|].
+  etrans;[use   (BinCoproductOfArrows_comp' _ (tensor_left_bp _ _ _))|].
   now rewrite id_right,id_left.
 Qed.
 

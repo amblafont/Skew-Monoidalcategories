@@ -1,4 +1,4 @@
-OBJS = SkewMonoidalCategories.vo Complements.vo SkewMonoids.vo IModules.vo StructuralStrengths.vo  InitialAlgebraicMonoid.vo Summary.vo
+OBJS = Complements.vo IModules.vo StructuralStrengths.vo  InitialAlgebraicMonoid.vo Summary.vo
 CC = coqc
 FLAGS = -noinit -indices-matter -type-in-type -w none
 

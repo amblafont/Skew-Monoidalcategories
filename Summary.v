@@ -20,12 +20,15 @@ Require Import UniMath.CategoryTheory.limits.initial.
 Require Import UniMath.CategoryTheory.limits.graphs.eqdiag.
 Require Import UniMath.CategoryTheory.FunctorAlgebras.
 Require Import UniMath.CategoryTheory.FunctorCategory.
+Require Import UniMath.CategoryTheory.coslicecat.
 
-Require Import SkewMonoidalCategories.
+Require Import UniMath.CategoryTheory.SkewMonoidal.SkewMonoidalCategories.
+Require Import UniMath.CategoryTheory.SkewMonoidal.CategoriesOfMonoids.
+Require Import UniMath.CategoryTheory.limits.graphs.coequalizers.
+
 Require Import StructuralStrengths.
 Require Import IModules.
 Require Import Complements.
-Require Import SkewMonoids.
 Require Import InitialAlgebraicMonoid.
 
 Local Open Scope cat.
@@ -34,111 +37,163 @@ Local Open Scope cat.
 Delimit Scope functor_scope with F.
 Infix "××" := pair_functor (at level 31).
 
+(* Notation for product category *)
+Infix "×C" := precategory_binproduct (at level 38).
+(** Notation for constructing objects and morphisms of a product category *)
+Notation "( c , d )" := (make_precatbinprod c d).
+Notation "( f #, g )" := (precatbinprodmor f g).
+
+
 
 (**
 The command:
 
-Check (x ::= y) 
+Check (x ≡ y) 
 
 succeeds if and only if [x] is convertible to [y]
 
 *)
-Notation  "x ::= y"  := ((idpath _ : x = y) = idpath _) (at level 70, no associativity).
+Notation  "x ≡ y"  := ((idpath _ : x = y) = idpath _) (at level 70, no associativity).
 
-Fail Check (true ::= false).
-Check (true ::= true).
+Fail Check (true ≡ false).
+Check (true ≡ true).
 
 Section Summary.
 
 
-
-
 (** We suppose given a skew monoidal category V
-(see SkewMonoidalCategories.skewmonoidal_precat for the definition)
  *)
-Context (V : skewmonoidal_precat) (hsV : has_homsets V).
+Context (V : skewmonoidal_precategory) (hsV : has_homsets V).
 
 (** Some notations for the monoidal structure *)
-Notation I := (skewmonoidal_precat_unit V).
-Notation α' := (skewmonoidal_precat_associator V).
-Notation λ' := (skewmonoidal_precat_left_unitor V).
-Notation ρ' := (skewmonoidal_precat_right_unitor V).
-Notation tensor := (skewmonoidal_precat_tensor V).
+Notation tensor := (skewmonoidal_tensor (data_from_skewmonoidal V)).
+Notation I := (skewmonoidal_I (data_from_skewmonoidal V)).
+Notation α' := (skewmonoidal_assoc (data_from_skewmonoidal V)).
+Notation λ' := (skewmonoidal_unitl (data_from_skewmonoidal V)).
+Notation ρ' := (skewmonoidal_unitr (data_from_skewmonoidal V)).
 
 (** We denote ⊗ the tensor product, and #⊗ the action on morphisms *)
 Notation "X ⊗ Y" := (tensor (X , Y)).
-Notation "f #⊗ g" := (# tensor  (f #, g)) (at level 31).
+Notation "f #⊗ g" :=
+   (functor_on_morphisms (functor_data_from_functor _ _ tensor) (f #, g))
+                         (at level 31).
 
 
-(** * Pointed I-modules
+(** * I-modules and pointed I-modules
 covered by IModules.v 
-
-We sometimes call them simply I-modules.
  *)
 
 
 
 (**
-A pointed I-module on V consists of an object F of V together
-with two maps, subject to some laws given later.
-There is an implicit coercion between pointed I-modules and objects of V
+A I-module on V consists of an object F of V together
+with a map F ⊗ I → F, subject to some laws given later.
+There is an implicit coercion between I-modules and objects of V
  *)
-Check (IModule_data V ::= ∑ (F : V) , F ⊗ I --> F × I --> F).
+Check (IModule_data V ≡ ∑ (F : V), F ⊗ I --> F).
 
-(** Some notations for the maps *)
-Local Definition σ (F : IModule_data V) : F ⊗ I --> F := pr1 (pr2 F).
-Local Definition ϵ (F : IModule_data V) : I --> F := pr2 (pr2 F).
+(** Some notations for the action *)
+Check (∏  F : IModule_data V, im_action V F ≡ (pr2 F : F ⊗ I --> F)).
+Notation σ := (im_action V).
 
-(** A pointed I-module consists of the data previously defined subject to
+(** A I-module consists of the data previously defined subject to
   two laws *)
-Check (IModule V ::=
+Check (IModule V ≡
          ∑ (F : IModule_data V) ,
          (** First law *)
          (ρ' F · σ F  = identity _)
            ×
            (** Second law *)
-           (α' (((F : V) , I) , I) · (identity _) #⊗ ((λ' I) ) · σ F  =
+           (α' F I I · (identity _) #⊗ λ' I · σ F  =
             σ F #⊗ identity I · σ F)
       ).
 
 
-(** A morphism between pointed I-modules X and Y is a morphism between
-underlying objects of V subject to two laws.
+(** A morphism between I-modules X and Y is a morphism between
+underlying objects of V preserving the action
  *)
 Check  (∏ (X Y : IModule V),
-        IModule_Mor V X Y ::=
-          ∑ (f :  V ⟦X, Y⟧) ,
-          (** the unit is preserved *)
-          (ϵ X · f = ϵ Y)
+        IModule_Mor V X Y ≡
+          ∑ (f :  V ⟦X, Y⟧) , 
             (** the morphism is compatible with σ *)
-            × σ X · f = (f #⊗ identity _) · σ Y).
+             σ X · f = (f #⊗ identity _) · σ Y).
 
-(** pointed I-modules form a category (see StructuralStrengths.precategory_algMonoid
-   for the details)
- *)
-Check (precategory_IModule V hsV ::=
+          (* (** the unit is preserved *) *)
+          (* (ϵ X · f = ϵ Y) *)
+
+(** I-modules form a category  *)
+Check (precategory_IModule V hsV ≡
           (make_precategory_ob_mor (IModule V) (IModule_Mor V)
              ,, _) ,, _ ,, _).
 
-(** We denote by M this category in the following *)
-Notation M := (precategory_IModule V hsV).
-
-(** The forgetful functor from M to V *)
-Check (forget_IModules V hsV : functor M V).
-(** We use the notation 𝒰 in the following when we want to make explicit the
-coercion between pointed I-modules and objects of V. *)
-Notation 𝒰 := (forget_IModules V hsV).
-Check (∏ (X : IModule V), 𝒰 X ::= (X : V)).
 
 (** The unit can be given the structure of a pointed I-module *)
-Definition IM : IModule V := IModule_I V.
+Notation IM := (IModule_I V).
+(** Checking the underlying V object. *)
+Check ((IM : V) ≡ I).
 
-Lemma IM_as_object_of_V_is_I : 𝒰 IM = I.
-  reflexivity.
-Qed.
+(** The category of pointed I-modules is the coslice category of the category
+of I-modules under I *)
+Check (precategory_PtIModule V hsV ≡
+                             coslice_precat (precategory_IModule V hsV) IM
+                             (has_homsets_IModule V hsV IM)).
+
+Notation PtIM_Cat := (precategory_PtIModule V hsV).
+
+Check (PtIModule V hsV ≡ ob PtIM_Cat).
+
+(* Notation for the point *)
+Notation ϵ := (im_unit V hsV).
+
+(** IM is canonically a pointed I-module *)
+Notation IP := (PtIModule_I V hsV).
+Check ((IP : IModule V) ≡ IM).
+Check (ϵ IP ≡ identity (C := precategory_IModule V hsV) IM).
+
+(** The forgetful functor from pointed I-modules to V *)
+Check (forget_PtIModules V hsV : functor PtIM_Cat V).
+
+(** We use the notation 𝒰 in the following when we want to make explicit the
+coercion between pointed I-modules and objects of V. *)
+Notation 𝒰 := (forget_PtIModules V hsV).
+Check (∏ (X : PtIModule V hsV), 𝒰 X ≡ (X : V)).
+
+
+
+(** There is a tensor product on pointed I-modules, defined as a coequalizer,
+here called [PtIModule_tensor].
+This requires that V has coequalizers (in fact, reflexive coequalizers are enough), and
+the tensoring on the right with I preserves them.
+ *)
+Context (coeqsV : coequalizers.Coequalizers V).
+Context  (tensorl_coeqs : preserves_colimits_of_shape
+                            ((functor_fix_snd_arg _ _ _ tensor I)) coequalizers.Coequalizer_graph ).
+
+Check (PtIModule_tensor V hsV coeqsV tensorl_coeqs
+       : PtIModule V hsV → PtIModule V hsV → PtIModule V hsV).
+Infix "⊠M" := (PtIModule_tensor V hsV coeqsV tensorl_coeqs) (at level 31).
+
+(** The underlying object of V of the tensor is the coequalizer of two morphisms
+ from (X ⊗ I) ⊗ Y to X ⊗ Y
+ *)
+Check  (∏ (X Y : PtIModule V hsV),
+        𝒰 (X ⊠M Y) ≡
+          CoequalizerObject
+               V (coeqsV ((X ⊗ I) ⊗ Y) (X ⊗ Y)
+                         (** Here is the first one *)
+                         (α' X I Y · identity X #⊗ λ' Y)
+                         (** Here is the second one *)
+                         (σ X #⊗ identity Y)
+            )).
+
+(** Notation for the coequalizer arrow *)
+Notation κ := (IModule_tensor'_proj V hsV coeqsV tensorl_coeqs).
+Check (fun (M N : PtIModule V hsV) => κ M N : M ⊗ N --> M ⊠M N).
+
 
 (** The tensor product can be lifted to the category of I-modules, there
  called [IModule_tensor] *)
+(*
 Check (IModule_tensor V : IModule V -> IModule V -> IModule V ).
 Infix "⊗M" := (IModule_tensor V) (at level 31).
 
@@ -147,6 +202,8 @@ Lemma IModule_tensor_lifts_tensor (A B : IModule V) :
 Proof.
   reflexivity.
 Qed.
+*)
+
 
 
 (** * Structural strengths 
@@ -163,27 +220,22 @@ to V, subject to two laws.
 
 There is an implicit coercion between strengths and natural
 transformations.  *)
-Check (strength V hsV H ::=
-         ∑ (st : nat_trans (C := V ⊠ M) (C' := V)
+Check (strength hsV coeqsV tensorl_coeqs H ≡
+         ∑ (st : nat_trans (C := V ×C PtIM_Cat) (C' := V)
                    ((H ×× 𝒰) ∙ tensor)
                    ((functor_identity _ ×× 𝒰) ∙ tensor ∙ H)
            ),
          (** first law: triangle *)
-         (∏ (a : V), ρ' (H a) · st (a, (IM : M))  = # H (ρ' a))
+         (∏ (a : V), ρ' (H a) · st (a, (IP : PtIM_Cat))  = # H (ρ' a))
          (** second law: pentagon *)
            ×
            (∏ (a : V),
-            ∏ (x y : IModule V) (z : V)(f : V ⟦ x ⊗ y , z ⟧)
-              (eqf : (σ x #⊗ identity y) · f =
-                     α' ((x , I) , y) · (identity x #⊗ λ' y) · f),
-            (α' ((H a,  x),  y)) · st (a , (x ⊗M y : M))
-                                 · # H (identity _ #⊗ f)
+            ∏ (x y : PtIModule V hsV) ,
+            α' (H a) x y · identity (H a) #⊗ κ x y · st (a , (x ⊠M y : PtIM_Cat))
             =
-            (st (a, (x : M)) #⊗ identity y)
-              · st ((a ⊗ x), (y : M))
-              · # H (α' ((a,  x),  y))
-              · # H (identity _ #⊗ f))
-      ).
+            (st (a, (x : PtIM_Cat)) #⊗ identity y)
+              · st ((a ⊗ x), (y : PtIM_Cat))
+              · # H (α' a x y · identity a #⊗ κ x y))).
 
 (** * Skew H-monoids
 
@@ -200,37 +252,38 @@ Local Definition η (m : skewMonoid V) : V ⟦I , m⟧ := sm_unit V m.
 Local Definition μ (m : skewMonoid V) : V ⟦m ⊗ m, m⟧ := sm_mult V m.
 
 (** We suppose given a strength for the endofunctor H *)
-Context (st : strength V hsV H).
+Context (st : strength hsV coeqsV tensorl_coeqs H).
 
 (**
 A H-monoid consists of a skew monoid with an H algebra structure,
 subject to some laws.
 There is an implicit coercion between H-monoids and skew monoids.
  *)
-Check (@algMonoid_data V H ::= ∑ X : skewMonoid V, H X --> X).
+Check (@algMonoid_data V H ≡ ∑ X : skewMonoid V, H X --> X).
 
 (** Notation for the algebra structure *)
-Local Definition κ (X : @algMonoid_data V H) : H X --> X := pr2 X.
+Check (∏ (X : algMonoid_data), am_alg X ≡ (pr2 X : H X --> X)).
+
+Local Notation γ := am_alg.
 
 (** A H-monoid consists of the data previously detailed subject to an equation *)
-Check (algMonoid st ::=
+Check (algMonoid st ≡
          ∑ (X : algMonoid_data),
-         (st : nat_trans _ _)
-           (X , (IModule_from_monoid _ X : M))
-           · # H (μ X) · κ X
-         = κ X #⊗ identity X · (μ X)).
+         st X (PtIModule_from_monoid _ _ X)
+           · # H (μ X) · γ X
+         = γ X #⊗ identity X · (μ X)).
 
 (** A H-monoid morphism between H-monoids X and Y consists of a morphism that is
 both a morphism of skew monoids and of algebras *)
 Check  (∏ (X Y : algMonoid st),
-        algMonoid_Mor X Y ::=
-          ∑ (f : skewMonoid_Mor _ X Y) , κ X · f = # H f · (κ Y)).
+        algMonoid_Mor X Y ≡
+          ∑ (f : skewMonoid_Mor _ X Y) , γ X · f = # H f · (γ Y)).
 
 
 (** H-monoids form a category (see StructuralStrengths.precategory_algMonoid
    for the details)
  *)
-Check ( precategory_algMonoid st ::=
+Check ( precategory_algMonoid st ≡
           (make_precategory_ob_mor (algMonoid st) (algMonoid_Mor (F := H) )
              ,, _) ,, _ ,, _).
 
@@ -252,9 +305,9 @@ Check (@Thm47 :
            (hsA : has_homsets A)(chA : Colims_of_shape nat_graph A)
            {J : C ⟶ A}(OJ : isInitial _ (J (InitialObject OC)))
            (omegaJ : is_omega_cocont J)
-           {F : D ⊠ C ⟶ C}
+           {F : D ×C C ⟶ C}
            (omegaF : ∏ d , is_omega_cocont (functor_fix_fst_arg _ _ _ F d))
-           {G : B ⊠ A ⟶ A}
+           {G : B ×C A ⟶ A}
            (omegaG : ∏ b , is_omega_cocont (functor_fix_fst_arg _ _ _ G b))
            {K : D ⟶ B} (h : F ∙ J ⟹ (K ×× J) ∙ G)
            {a : A}{d : D}(α : A ⟦ G (K d , a) , a ⟧)
@@ -278,19 +331,21 @@ covered by InitialAlgebraicMonoid.v
  *)
 Check (algMonoid_Initial :
            (** V is a skew monoidal category *)
-        ∏ (V : skewmonoidal_precat) (hsV : has_homsets V),
+        ∏ (V : skewmonoidal_precategory) (hsV : has_homsets V),
          (** V has colimits of chains *)
          Colims_of_shape nat_graph V ->
          (** V has an initial object *)
          Initial V ->
          (** V has binary coproducts *)
          BinCoproducts V ->
+         (** V has coequalizers *)
+         ∏ (coeqsV : Coequalizers V)
          (** the tensor is left cocontinuous *)
-         ((∏ X : V,
+         (ltensor_CC : (∏ X : V,
                  is_cocont
-                   (functor_fix_snd_arg V V V (skewmonoidal_precat_tensor V) X)))
-         (** H is an endofunctor on V with a strength *)
-      → ∏ (H : V ⟶ V) (st : strength V hsV H),
+                   (functor_fix_snd_arg V V V (skewmonoidal_tensor V) X)))
+         (** H is an endofunctor on V with a strength *),
+      ∏ (H : V ⟶ V) (st : strength hsV coeqsV _ H),
          (** H is omega cocontinuous *)
          is_omega_cocont H →
          Initial (precategory_algMonoid st)
@@ -300,13 +355,13 @@ Check (algMonoid_Initial :
 Infix "++" := (BinCoproduct_of_functors _ _ _) .
 
 (** The underlying object of V is the initial algebra of the endofunctor
-X ↦ I + H(X) *)
-Check ((fun V hsV ω O cp lcc H st Hωcc => A_is_InitialAlg_sumFI V hsV ω O cp H Hωcc) :
-         ∏ (V : skewmonoidal_precat) hsV
-         ω O cp lcc 
+    X ↦ I + H(X) *)
+Definition underlying_object :
+         ∏ (V : skewmonoidal_precategory) hsV
+         ω O cp coeqsV lcc 
          H st
          Hωcc,
-       ((InitialObject (algMonoid_Initial V hsV ω O cp lcc H st Hωcc)
+       ((InitialObject (algMonoid_Initial V hsV ω O cp coeqsV lcc H st Hωcc)
          : algMonoid st)
           (** The coercion yields the underlying object of V *)
         : V) =
@@ -314,7 +369,11 @@ Check ((fun V hsV ω O cp lcc H st Hωcc => A_is_InitialAlg_sumFI V hsV ω O cp 
            object *)
          alg_carrier
            (** here, F = I + H *)
-           (constant_functor _ _ (skewmonoidal_precat_unit V) ++ H)
+           (constant_functor _ _ (skewmonoidal_I V) ++ H)
            (** and we consider the initial algebra *)
-           (InitialObject (colimAlgInitial _ _ _ _))).
+           (InitialObject (colimAlgInitial _ _ _ _))
+  := 
+    (* The proof *)
+    (fun V hsV ω O cp coeqsV lcc H st Hωcc =>
+       A_is_InitialAlg_sumFI V hsV ω O cp H Hωcc).
 

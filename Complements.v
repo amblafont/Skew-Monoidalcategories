@@ -102,80 +102,6 @@ End Theorem47.
 
 Local Infix ",," := bindelta_pair_functor  : functor_scope .
 
-(** id + id = id *)
-Lemma BinCoproductOfIdentities
-           {C : precategory}   {a b : C}
-           (ccab : BinCoproduct C a b) :
-  identity ccab = BinCoproductOfArrows _ ccab ccab (identity a) (identity b).
-Proof.
-  apply BinCoproduct_endo_is_identity.
-  - etrans;[apply BinCoproductOfArrowsIn1|apply id_left].
-  - etrans;[apply BinCoproductOfArrowsIn2|apply id_left].
-Qed.
-           
-(* A version of BinCoproductOfArrows with given bincoproducts
-TODO: upload in Unimath
- *)
-Definition BinCoproductOfArrows_comp'
-           {C : precategory}   {a b c d x y : C}
-           (ccab : BinCoproduct C a b)(cccd : BinCoproduct C c d)
-           (ccxy : BinCoproduct C x y)
-           (f : C ⟦ a, c ⟧) (f' : C ⟦ b, d ⟧)
-(g : C ⟦ c, x ⟧) (g' : C ⟦ d, y ⟧) 
-  : BinCoproductOfArrows _ ccab cccd f f' ·
-    BinCoproductOfArrows _ _ _ g g'
-    =
-    BinCoproductOfArrows _ _ ccxy (f · g) (f' · g').
-Proof.
-  apply BinCoproductArrowUnique.
-  - rewrite assoc.
-    rewrite BinCoproductOfArrowsIn1.
-    rewrite <- assoc.
-    rewrite BinCoproductOfArrowsIn1.
-    apply assoc.
-  - rewrite assoc.
-    rewrite BinCoproductOfArrowsIn2.
-    rewrite <- assoc.
-    rewrite BinCoproductOfArrowsIn2.
-    apply assoc.
-Qed.
-
-Definition CoequalizerOfArrows {C : precategory}
-           {a a' b b' : C} {f g : a --> b}
-           {f' g' : a' --> b'}
-           (cfg : Coequalizer _ f g) 
-           (cfg' : Coequalizer _ f' g')
-           (u : a --> a')
-           (v : b --> b')
-           (eqf : f · v = u · f')
-           (eqg : g · v = u · g')
-           :
-          CoequalizerObject _ cfg --> CoequalizerObject _ cfg'.
-Proof.
-  unshelve eapply CoequalizerOut.
-  - refine (v · _).
-    apply CoequalizerArrow.
-  -  abstract (rewrite ! assoc, eqf , eqg, ! assoc' ;
-     apply cancel_precomposition, CoequalizerArrowEq).
-Defined.
-
-Lemma CoequalizerOfArrowsEq
- {C : precategory}
-           {a a' b b' : C} {f g : a --> b}
-           {f' g' : a' --> b'}
-           (cfg : Coequalizer _ f g) 
-           (cfg' : Coequalizer _ f' g')
-           (u : a --> a')
-           (v : b --> b')
-           (eqf : f · v = u · f')
-           (eqg : g · v = u · g')
-           :
-             CoequalizerArrow _ cfg · CoequalizerOfArrows cfg cfg' u v eqf eqg  =
-             v · CoequalizerArrow _ cfg'.
-Proof.
-  apply  CoequalizerArrowComm.
-Qed.
-
 
 Lemma binprod_functor_combine_morphisms {C D E : precategory} (F : C ⊠ D ⟶ E)
       {c c'} (f : C ⟦ c , c' ⟧)
@@ -209,13 +135,6 @@ Proof.
 Qed.
 
 
-
-(** All diagrams over the empty graphs are equal *)
-Lemma eq_diag_empty_graph  {D : category} (d d' : diagram initial.empty_graph D) :
-  eq_diag (C := D) d d'.
-Proof.
-  use tpair; use empty_rect.
-Defined.
 
 (** ** A pair of functors (F,G) : A  -> C * D is omega cocontinuous if F and G are *)
 Section delta_pairfunctors.
@@ -318,70 +237,6 @@ Definition is_omega_cocont_fix_snd_arg c : is_omega_cocont (functor_fix_snd_arg 
 
 End  FunctorFixCocont.
 
-Lemma mapdiagram_bincoproduct_eqdiag {C : precategory}{D : category}
-      (F : functor C D)(a b : C)  :
-  eq_diag (C := D)
-          (mapdiagram F (bincoproducts.bincoproduct_diagram a b))
-          (bincoproducts.bincoproduct_diagram (F a) (F b)).
-Proof.
-  use tpair.
-  - use bool_rect; apply idpath.
-  - intros ??; use empty_rect.
-Defined.
-
-Lemma mapdiagram_coequalizer_eqdiag {C : precategory}{D : category}
-      (F : functor C D){a b : C}(f g : a --> b)  :
-  eq_diag (C := D)
-          (mapdiagram F (coequalizers.Coequalizer_diagram _ f g))
-          (coequalizers.Coequalizer_diagram _ (# F f) (# F g)).
-Proof.
-  use tpair.
-  -  use StandardFiniteSets.two_rec_dep; cbn; apply idpath.
-  -  use StandardFiniteSets.two_rec_dep;  use StandardFiniteSets.two_rec_dep;
-       try exact (empty_rect _ ).
-     intro e.
-     induction e; apply idpath.
-Defined.
-
-Definition coconeeq {C : precategory} (hsC : has_homsets C) {g : graph}{d:  diagram g C}{x : C}
-           (cc1 cc2 : cocone d x)
-           (eqin : ∏ g, coconeIn cc1 g = coconeIn cc2 g)  : cc1 = cc2.
-Proof.
-  use subtypePath'.
-  - apply funextsec.
-    exact eqin.
-  - repeat (apply impred_isaprop; intro).
-    apply hsC.
-Defined.
-
-
-
-(* TODO: upload in UniMath  *)
-Definition equiv_isBinCoproduct1 {C : precategory}(hsC : has_homsets C) { a b c}
-           (u : C ⟦ a, c⟧)(v : C ⟦ b, c⟧) :
-  isBinCoproduct C a b c u v -> isBinCoproductCocone _ _ _ _ u v :=
-  make_isBinCoproductCocone _ hsC _ _ _ _ _.
-
-(* TODO: upload in UniMath (make BinCoproducts_from_Colims use this lemma) *)
-Lemma equiv_isBinCoproduct2 {C : precategory}(hsC : has_homsets C) { a b c}
-      (u : C ⟦ a, c⟧)(v : C ⟦ b, c⟧) :
-  isBinCoproductCocone _ _ _ _ u v -> isBinCoproduct C a b c u v.
-Proof.
-  intro h.
-  set (CC := make_BinCoproductCocone _ _ _ _ _ _ h); simpl.
-  intros x f g.
-  (* set (CCfg := (bincoproducts.BinCoproductArrow C CC f g)). *)
-  use unique_exists; simpl.
-  - apply (bincoproducts.BinCoproductArrow C CC f g).
-  - abstract (split;
-              [ apply (bincoproducts.BinCoproductIn1Commutes  _ _ _ CC)
-              | apply (bincoproducts.BinCoproductIn2Commutes  _ _ _ CC)]).
-  - abstract (intros h'; apply isapropdirprod; apply hsC).
-  - intros h' [H1 H2].
-    eapply (bincoproducts.BinCoproductArrowUnique _ _ _ CC).
-    + exact H1.
-    + exact H2.
-Defined.
 
 Lemma cocont_preserves_isBinCoproduct
       {C : category}
@@ -400,19 +255,19 @@ Proof.
   {
     red.
     eapply (eq_diag_liftcolimcocone (C := D)).
-    - unshelve apply mapdiagram_bincoproduct_eqdiag.
+    - unshelve apply mapdiagram_bincoproduct_eq_diag.
     - eapply make_ColimCocone.
       eapply cocontF.
-      apply equiv_isBinCoproduct1.
+      apply limits_isBinCoproductCocone_from_isBinCoproduct.
       + exact (homset_property C).
       + exact (isBinCoproduct_BinCoproduct _ ccAB).
   }
-  apply equiv_isBinCoproduct2; [ apply homset_property|].
+  apply limits_isBinCoproduct_from_isBinCoproductCocone ; [ apply homset_property|].
   red.
   generalize (pr2 h).
   cbn.
   apply transportf.
-  apply coconeeq;[apply homset_property|].
+  apply cocone_paths;[apply homset_property|].
   use bool_rect; apply idpath.
 Qed.
 
@@ -428,7 +283,7 @@ Proof.
   transparent assert (h : (initial.Initial D)).
   {
     eapply (eq_diag_liftcolimcocone (C := D)).
-    - eapply (eq_diag_empty_graph (D := D)).
+    - eapply (graphs.initial.empty_graph_eq_diag (homset_property D)).
     - eapply make_ColimCocone.
       apply initial.equiv_isInitial1 in Io.
       eapply cocontF in Io.
@@ -455,3 +310,29 @@ Proof.
 Defined.
 
 End coslice_precat_theory.
+
+
+(* TODO: move to complememts, and use it more often
+ for example for the swap stuff in Complements *)
+Lemma binprod_change_mor {C D E : precategory }
+      (F : C ⊠ D ⟶ E)
+      {c1 c2 c2' c3 : C}
+      (f : c1 --> c2)(g : c2 --> c3) 
+      (f' : c1 --> c2')(g' : c2' --> c3)
+      {d1 d2 d2' d3 : D}
+      (u : d1 --> d2)(v : d2 --> d3) 
+      (u' : d1 --> d2')(v' : d2' --> d3)
+      (eqc : f · g = f' · g')
+      (eqd : u · v = u' · v')
+  :
+    # F (f #, u) ·
+    # F (g #, v)
+    =
+    # F (f' #, u') ·
+    # F (g' #, v').
+Proof.
+  do 2 rewrite <- (functor_comp F (_ #, _)).
+  cbn.
+  rewrite eqc , eqd.
+  apply idpath.
+Qed.

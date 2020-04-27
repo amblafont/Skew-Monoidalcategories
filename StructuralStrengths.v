@@ -11,8 +11,10 @@ Require Import UniMath.CategoryTheory.Core.Categories.
 Require Import UniMath.CategoryTheory.Core.Functors.
 Require Import UniMath.CategoryTheory.Core.NaturalTransformations.
 Require Import UniMath.CategoryTheory.PrecategoryBinProduct.
-Require Import SkewMonoidalCategories.
-Require Import SkewMonoids.
+Require Import UniMath.CategoryTheory.limits.graphs.colimits.
+Require Import UniMath.CategoryTheory.SkewMonoidal.SkewMonoidalCategories.
+Require Import UniMath.CategoryTheory.SkewMonoidal.CategoriesOfMonoids.
+Require Import Complements.
 Require Import IModules.
 
 
@@ -20,12 +22,15 @@ Require Import IModules.
 Local Open Scope cat.
 Local Notation "'id' X" := (identity X) (at level 30).
 
+Local Notation "( c , d )" := (make_precatbinprod c d).
+Local Notation "( f #, g )" := (precatbinprodmor f g).
+Local Notation "C ⊠ D" := (precategory_binproduct C D) (at level 38).
 Local Notation φ₁ := (functor_fix_fst_arg _ _ _).
 Local Notation φ₂ := (functor_fix_snd_arg _ _ _).
 Local Infix "×" := pair_functor  : functor_scope .
 Delimit Scope functor_scope with F.
 
-Definition strength_data {V : skewmonoidal}(hsV : has_homsets V)(F : V ⟶ V) : UU :=
+Definition strength_data {V : skewmonoidal_precategory}(hsV : has_homsets V)(F : V ⟶ V) : UU :=
   nat_trans (C := V ⊠ precategory_PtIModule V hsV)
             (C' := V)
             ((F × forget_PtIModules V hsV)%F ∙ (skewmonoidal_tensor V))
@@ -33,7 +38,7 @@ Definition strength_data {V : skewmonoidal}(hsV : has_homsets V)(F : V ⟶ V) : 
 
 Section A.
 
-  Context {V : skewmonoidal} {hsV : has_homsets V}{F : V ⟶ V}
+  Context {V : skewmonoidal_precategory} {hsV : has_homsets V}{F : V ⟶ V}
           (st : strength_data hsV F) .
 
 (* Implicit coercions do not work for reversible notations *)
@@ -41,7 +46,7 @@ Notation tensor := (skewmonoidal_tensor (data_from_skewmonoidal V)).
 Notation I := (skewmonoidal_I (data_from_skewmonoidal V)).
 
 Context (coeqsV : coequalizers.Coequalizers V).
-Context  (tensorl_coeqs : preserves_colimit_of_shape (φ₂ tensor I) coequalizers.Coequalizer_graph ).
+Context  (tensorl_coeqs : preserves_colimits_of_shape (φ₂ tensor I) coequalizers.Coequalizer_graph ).
    
 Notation "X ⊗ Y" := (tensor (X , Y)).
 (* TODO: copy this in skew monoids *)
@@ -83,26 +88,28 @@ Definition strength_laws :=
 End A.
 
 Coercion strength_pw : strength_data >-> Funclass.
-Definition strength {V : skewmonoidal}(hsV : has_homsets V)(F : V ⟶ V)
+Definition strength {V : skewmonoidal_precategory}(hsV : has_homsets V)
  (coeqsV : coequalizers.Coequalizers V)
-  (tensorl_coeqs : preserves_colimit_of_shape (φ₂ (skewmonoidal_tensor V) (skewmonoidal_I V))
+  (tensorl_coeqs : preserves_colimits_of_shape (φ₂ (skewmonoidal_tensor V) (skewmonoidal_I V))
       coequalizers.Coequalizer_graph)
+  (F : V ⟶ V)
   : UU :=
   ∑ (s : strength_data hsV F), strength_laws s coeqsV tensorl_coeqs.
 
-Coercion data_from_strength {V hsV F coeqsV tensorl_coeqs}
-         (s : @strength V hsV F coeqsV tensorl_coeqs) :
+Coercion data_from_strength {V hsV coeqsV tensorl_coeqs F}
+         (s : @strength V hsV coeqsV tensorl_coeqs F) :
   strength_data hsV F := pr1 s.
 
 
 Section B.
 
-  Context {V : skewmonoidal} {hsV : has_homsets V}{F : V ⟶ V}
+  Context {V : skewmonoidal_precategory} {hsV : has_homsets V}
           {coeqsV : coequalizers.Coequalizers V}
-          {tensorl_coeqs : preserves_colimit_of_shape
+          {tensorl_coeqs : preserves_colimits_of_shape
                              (φ₂ (skewmonoidal_tensor V) (skewmonoidal_I V))
                              coequalizers.Coequalizer_graph }.
-  Context (s : strength hsV F coeqsV tensorl_coeqs).
+
+  Context {F : V ⟶ V}(s : strength hsV coeqsV tensorl_coeqs F).
 
 Notation tensor := (skewmonoidal_tensor (data_from_skewmonoidal V)).
 Notation I := (skewmonoidal_I (data_from_skewmonoidal V)).

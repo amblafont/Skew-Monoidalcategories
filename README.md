@@ -4,14 +4,19 @@ Compilation: make
 
 ## Dependencies
 
-Coq is required.
+Coq is required. For the interactive mode, the following options should
+be given to coqtop: `-noinit -indices-matter -type-in-type -w -notation-overridden`
+
 
 The UniMath library is required with at least the following packages:
-Foundations, MoreFoundations, CategoryTheory, and Tactics.
+Foundations, MoreFoundations, Combinatorics, Algebra, NumberSystems, 
+CategoryTheory.
 
 This was tested with:
 - Coq 8.11
-- UniMath commit version 93c0bd5ce1cc597d0298540eec6f3791b7e2b5cb.
+- UniMath commit version 47f5efb58a6ff78beb7f67e399eda00875a5afd
+
+
 
 ## Summary 
 
@@ -27,18 +32,17 @@ object with algebraic structures" (extended version), found in [`Complements.v`]
 
 ## Files
 
-by order of dependency:
+The definitions of skew monoidal categories and their monoids is now in UniMath.
 
-1. [`SkewMonoidalCategories.v`](SkewMonoidalCategories.v): definitions of
-skew monoidal categories.
-2. [`Complements.v`](Complements.v): complements, axiomatization of Theorem 4.7
+By order of dependency:
+
+1. [`Complements.v`](Complements.v): complements, axiomatization of Theorem 4.7
 of Fiore-Saville "List object with algebraic structures" (extended version)
-3. [`SkewMonoids.v`](SkewMonoids.v)
-4. [`IModules.v`](IModules.v): category of pointed I-modules
-5. [`StructuralStrengths.v`](StructuralStrengths.v)
-6. [`InitialAlgebraicMonoid.v`](InitialAlgebraicMonoid.v): construction of an 
+2. [`IModules.v`](IModules.v): category of pointed I-modules
+3. [`StructuralStrengths.v`](StructuralStrengths.v)
+4. [`InitialAlgebraicMonoid.v`](InitialAlgebraicMonoid.v): construction of an 
 initial algebraic skew-monoid.
-7. [`Summary.v`](Summary.v): a summary of the important definitions and results.
+5. [`Summary.v`](Summary.v): a summary of the important definitions and results.
 
 
 

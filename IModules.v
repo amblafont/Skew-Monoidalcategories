@@ -24,32 +24,24 @@ X --> X ⊗ I
 and
 
 <<<
-          X ⊗ λ
-X ⊗ I ⊗ I ----> X ⊗ I
-   |              |
-   |              | 
-x⊗I|              | x
-   |              |
-   V              V
- X ⊗ I ---------> X 
-          x
+           α               X ⊗ λ
+X ⊗ I ⊗ I ---> X ⊗ (I ⊗ I) ----> X ⊗ I
+   |                               |
+   |                               |
+x⊗I|                               | x
+   |                               |
+   V                               V
+ X ⊗ I --------------------------> X
+                   x
 
 >>>
 
 In the skew monoidal setting, not all objects are modules over I.
 
-That 
-The square law is not necessary because the multiplication for I is an
-isomorphism
 
-  Based on the definitions of the category of algebras of an endofunctor
-
-skew monoids induce IModules (quick explanation: any monoid morphism induce
+Skew monoids induce IModules (quick explanation: any monoid morphism induce
 a functor between categories of modules, and I is the initial monoid).
 
-TODO: is ⊗ a monoidal product on modules? Apparently, there is no right unitor.
-(TODO: le verifier dans notre modele ℕ -> Set)
-Is there one for the new monoidal product?
 **)
 
 Require Import UniMath.Foundations.PartD.
@@ -62,23 +54,12 @@ Require Import UniMath.CategoryTheory.limits.graphs.coequalizers.
 Require Import UniMath.CategoryTheory.limits.graphs.colimits.
 Require Import UniMath.CategoryTheory.limits.graphs.eqdiag.
 Require Import UniMath.CategoryTheory.limits.bincoproducts.
-Require Import SkewMonoidalCategories.
-Require Import SkewMonoids.
+Require Import UniMath.CategoryTheory.SkewMonoidal.SkewMonoidalCategories.
+Require Import UniMath.CategoryTheory.SkewMonoidal.CategoriesOfMonoids.
 Require Import Complements.
 
 Local Open Scope cat.
 
-(* (* Definition of a retract *) *)
-(* Definition retract {C : precategory}{x y : C}(f : C ⟦ x , y ⟧) : UU := *)
-(*   ∑ (g : C ⟦ y , x ⟧), f · g = identity _. *)
-
-(* Coercion morphism_from_rectract {C : precategory}{x y : C}{f : C ⟦ x , y ⟧}(r : retract f) : C ⟦ y , x ⟧ := *)
-(*   pr1 r. *)
-
-(* Definition retract_isRetract {C : precategory}{x y : C}{f : C ⟦ x , y ⟧} *)
-(*            (r : retract f) : f · r = identity _ := pr2 r. *)
-
-(** ** Category of algebras of an endofunctor *)
 
 Section IModule_Definition.
 
@@ -86,18 +67,19 @@ Delimit Scope morphism_scope with m.
 Delimit Scope object_scope with o.
 Open Scope object_scope.
 
-Context (V : skewmonoidal).
+Context (V : skewmonoidal_precategory).
 Context (hsV : has_homsets V).
 
+Notation "( c , d )" := (make_precatbinprod c d).
+Notation "( f #, g )" := (precatbinprodmor f g).
+Notation "C ⊠ D" := (precategory_binproduct C D) (at level 38).
 
 (* Implicit coercions do not work for reversible notations *)
 Notation tensor := (skewmonoidal_tensor (data_from_skewmonoidal V)).
 Notation I := (skewmonoidal_I (data_from_skewmonoidal V)).
 Notation "X ⊗ Y" := (tensor (X , Y)).
-(* TODO: copy this in skew monoids *)
 Notation "f #⊗ g" :=
    (functor_on_morphisms (functor_data_from_functor _ _ tensor) (f #, g))
-
                          (at level 31).
 
 
@@ -152,10 +134,10 @@ Local Notation φ₂ := (functor_fix_snd_arg _ _ _).
 
 
 Definition IModule_Mor_laws  (X Y : IModule_data ) (f : X --> Y)
-  : UU 
+  : UU
   :=  σ X · f =  (f #⊗ identity _) · σ Y.
 
-Lemma isaprop_IModule_Mor_laws  
+Lemma isaprop_IModule_Mor_laws
   (T T' : IModule_data ) (α : T --> T')
   : isaprop (IModule_Mor_laws T T' α).
 Proof.
@@ -298,27 +280,6 @@ Proof.
   apply idpath.
 Qed.
 
-(*  TODO: move to complememts *)
-Definition preserves_colimit_of_shape 
-           {C D : precategory}(F :  C ⟶ D) (g : graph) : UU :=
-  ∏ (d : diagram g C) (cc : ColimCocone d) ,
-   isColimCocone (mapdiagram F d) _ (mapcocone F _ (colimCocone cc)).
-
-(*  TODO: move to complememts *)
-Lemma colimArrowUnique' 
- {C : precategory} {g : graph} {d : diagram g C} (CC : ColimCocone d)  
-{c} (k k' : C ⟦ colim CC, c ⟧):
-(∏ u : vertex g, colimIn CC u · k = colimIn CC u · k') → k = k'.
-Proof.
-  intro eq.
-  apply pathsinv0.
-  etrans.
-  { apply colimArrowEta. }
-  apply pathsinv0.
-  apply colimArrowUnique.
-  cbn.
-  exact eq.
-Qed.
 
 (*
 forgetful functor creates colimits (and also limits)
@@ -329,10 +290,10 @@ Definition forget_IMod_creates_colim_action_data
       (cc : ColimCocone dV) 
       (c := colim cc)
       (* true if the tensor is left cocontinuous *)
-      (is_ccV : preserves_colimit_of_shape (φ₂ tensor I) g)
+      (is_ccV : preserves_colimits_of_shape (φ₂ tensor I) g)
        : c ⊗ I --> c.
 Proof.
-  set (ccV := make_ColimCocone _ _ _ (is_ccV _ cc)).
+  set (ccV := make_ColimCocone _ _ _ (is_ccV _ _ _ (isColimCocone_from_ColimCocone cc))).
   change (colim ccV --> (colim cc )).
   unshelve eapply colimOfArrows.
   - intro.
@@ -349,7 +310,7 @@ Definition forget_IMod_creates_colim_data
       (cc : ColimCocone dV) 
       (c := colim cc)
       (* true if the tensor is left cocontinuous *)
-      (is_ccV : preserves_colimit_of_shape (φ₂ tensor I) g)
+      (is_ccV : preserves_colimits_of_shape (φ₂ tensor I) g)
   : IModule_data :=
   make_IModule_data c (forget_IMod_creates_colim_action_data  cc is_ccV).
 
@@ -359,12 +320,12 @@ Lemma forget_IMod_creates_colimIn_IMod_Mor_laws
       (cc : ColimCocone dV) 
       (c := colim cc)
       (* true if the tensor is left cocontinuous *)
-      (is_ccV : preserves_colimit_of_shape (φ₂ tensor I) g)
+      (is_ccV : preserves_colimits_of_shape (φ₂ tensor I) g)
   : ∏ (u : vertex g),
     IModule_Mor_laws _ (forget_IMod_creates_colim_data cc is_ccV)
                      (colimIn cc u).
 Proof.
-  set (ccV := make_ColimCocone _ _ _ (is_ccV _ cc)).
+  set (ccV := make_ColimCocone _ _ _ (is_ccV _ _ _ (isColimCocone_from_ColimCocone cc))).
   intro u.
   red.
   cbn.
@@ -372,30 +333,6 @@ Proof.
   use (colimOfArrowsIn _ _ ccV cc _ _).
 Qed.
 
-(* TODO: move to complememts, and use it more often
- for example for the swap stuff in Complements *)
-Lemma binprod_change_mor {C D E : precategory }
-      (F : C ⊠ D ⟶ E)
-      {c1 c2 c2' c3 : C}
-      (f : c1 --> c2)(g : c2 --> c3) 
-      (f' : c1 --> c2')(g' : c2' --> c3)
-      {d1 d2 d2' d3 : D}
-      (u : d1 --> d2)(v : d2 --> d3) 
-      (u' : d1 --> d2')(v' : d2' --> d3)
-      (eqc : f · g = f' · g')
-      (eqd : u · v = u' · v')
-  :
-    # F (f #, u) ·
-    # F (g #, v)
-    =
-    # F (f' #, u') ·
-    # F (g' #, v').
-Proof.
-  do 2 rewrite <- (functor_comp F (_ #, _)).
-  cbn.
-  rewrite eqc , eqd.
-  apply idpath.
-Qed.
 
 Lemma forget_IMod_creates_colim_law
             {g : graph}{d : diagram g IMOD}
@@ -403,10 +340,11 @@ Lemma forget_IMod_creates_colim_law
       (cc : ColimCocone dV) 
       (c := colim cc)
       (* true if the tensor is left cocontinuous *)
-      (is_ccV : preserves_colimit_of_shape (φ₂ tensor I) g)
+      (is_ccV : preserves_colimits_of_shape (φ₂ tensor I) g)
        : IModule_laws (forget_IMod_creates_colim_data cc is_ccV).
 Proof.
-  set (ccV := make_ColimCocone _ _ _ (is_ccV _ cc)).
+  set (ccV := make_ColimCocone _ _ _ (is_ccV _ _ _ (isColimCocone_from_ColimCocone cc))).
+
   split.
   - cbn.
     apply pathsinv0.
@@ -430,7 +368,8 @@ Proof.
     apply id_left.
   - cbn.
 
-  set (ccV' := make_ColimCocone _ _ _ (is_ccV _ ccV)).
+  set (ccV' := make_ColimCocone _ _ _ (is_ccV _ _ _ (isColimCocone_from_ColimCocone ccV))).
+
   apply (colimArrowUnique' ccV').
   (* goal: move the colimIn towards the end, in each hand side
    we start with the l.h.s *)
@@ -449,8 +388,8 @@ Proof.
       }
       rewrite assoc'.
       apply cancel_precomposition.
-       rewrite (tensor_id).
-       eapply (binprod_functor_swap_morphisms tensor).
+      rewrite (functor_id tensor).
+      eapply (binprod_functor_swap_morphisms tensor).
       
     }
     rewrite assoc'.
@@ -486,7 +425,7 @@ Definition forget_IMod_creates_colim_IModule
       (cc : ColimCocone dV) 
       (c := colim cc)
       (* true if the tensor is left cocontinuous *)
-      (is_ccV : preserves_colimit_of_shape (φ₂ tensor I) g)
+      (is_ccV : preserves_colimits_of_shape (φ₂ tensor I) g)
   : IModule :=
    _ ,, forget_IMod_creates_colim_law cc is_ccV.
 
@@ -496,7 +435,7 @@ Definition forget_IMod_creates_colim_cocone
       (cc : ColimCocone dV) 
       (c := colim cc)
       (* true if the tensor is left cocontinuous *)
-      (is_ccV : preserves_colimit_of_shape (φ₂ tensor I) g)
+      (is_ccV : preserves_colimits_of_shape (φ₂ tensor I) g)
       : cocone d (forget_IMod_creates_colim_IModule cc is_ccV).
 Proof.
   use make_cocone.
@@ -514,12 +453,12 @@ Lemma forget_IMod_creates_colim_colimArrow_laws
       (cc : ColimCocone dV) 
       (c := colim cc)
       (* true if the tensor is left cocontinuous *)
-      (is_ccV : preserves_colimit_of_shape (φ₂ tensor I) g)
+      (is_ccV : preserves_colimits_of_shape (φ₂ tensor I) g)
     {M : IModule} (ccM : cocone d M) :
   IModule_Mor_laws (forget_IMod_creates_colim_IModule cc is_ccV) M
                    (colimArrow cc M (mapcocone forget_IModules _ ccM)).
 Proof.
-  set (ccV := make_ColimCocone _ _ _ (is_ccV _ cc)).
+  set (ccV := make_ColimCocone _ _ _ (is_ccV _ _ _ (isColimCocone_from_ColimCocone cc))).
   etrans.
   apply (precompWithColimOfArrows _ _ ccV).
   apply pathsinv0.
@@ -549,7 +488,7 @@ Definition forget_IMod_creates_colim_isColimCocone
       (cc : ColimCocone dV) 
       (c := colim cc)
       (* true if the tensor is left cocontinuous *)
-      (is_ccV : preserves_colimit_of_shape (φ₂ tensor I) g)
+      (is_ccV : preserves_colimits_of_shape (φ₂ tensor I) g)
       : isColimCocone d _ (forget_IMod_creates_colim_cocone cc is_ccV).
 Proof.
   red.
@@ -579,7 +518,7 @@ Definition forget_IMod_creates_colim
       (cc : ColimCocone dV) 
       (c := colim cc)
       (* true if the tensor is left cocontinuous *)
-      (is_ccV : preserves_colimit_of_shape (φ₂ tensor I) g)
+      (is_ccV : preserves_colimits_of_shape (φ₂ tensor I) g)
   : ColimCocone d := make_ColimCocone d _ _
                                        (forget_IMod_creates_colim_isColimCocone cc is_ccV).
 
@@ -590,23 +529,16 @@ Definition forget_IMod_creates_colim_action_eq
       (cc : ColimCocone dV) 
       (c := colim cc)
       (* true if the tensor is left cocontinuous *)
-      (is_ccV : preserves_colimit_of_shape (φ₂ tensor I) g)
+      (is_ccV : preserves_colimits_of_shape (φ₂ tensor I) g)
       (u : vertex g)
-  (* : (colimIn (forget_IMod_creates_colim cc is_ccV) u : IModule_Mor _ _) #⊗ identity I · σ _ = *)
   : (colimIn cc u ) #⊗ identity I · forget_IMod_creates_colim_action_data cc is_ccV =
     σ (dob d u : IModule) ·
       (colimIn (forget_IMod_creates_colim cc is_ccV) u : IModule_Mor _ _).
 Proof.
-  set (ccV := make_ColimCocone _ _ _ (is_ccV _ cc)).
+  set (ccV := make_ColimCocone _ _ _ (is_ccV _ _ _ (isColimCocone_from_ColimCocone cc))).
   apply (colimOfArrowsIn _ _ ccV cc).
 Qed.
 
-(*
-
-The category of I-modules is skew monoidal, or almost
-
-
-*)
 
 (* I is a I-module *)
 Definition IModule_I_data : IModule_data :=
@@ -623,7 +555,7 @@ Definition IModule_I : IModule :=
   IModule_I_data ,, IModule_I_laws.
 
 (* The tensor product of I-modules is a I-module (actually, we only need
- that the left object is pointed *)
+ that the right object is a module) *)
 Definition IModule_tensor_data (A : V) (B : IModule_data) : IModule_data :=
   make_IModule_data (A ⊗ B) ((α' A B I ·  (identity A #⊗ σ B))  ).
    
@@ -722,7 +654,6 @@ Definition IModule_tensor (A : V) (B : IModule) : IModule :=
 
 Notation IM := IModule_I.
 
-      
 Infix "⊗M" := IModule_tensor (at level 31).
 
 Lemma IModule_tensor_Mor_laws {A B} {C D : IModule}
@@ -749,7 +680,6 @@ Proof.
   {
     rewrite assoc.
     apply cancel_postcomposition.
-    (* apply nat_trans_ax_α _ _ ((f #, g) #, identity _)). *)
     apply skewmonoidal_assoc_ax.
   }
   apply pathsinv0.
@@ -821,20 +751,7 @@ Definition IModule_unitl x : IModule_Mor (IModule_tensor I x) x :=
 Notation λM := IModule_unitl.
 
 
-(*
-Lemma IModule_left_unitor_is_nat_trans :
-  is_nat_trans (functor_fix_fst_arg _ _ _ IModule_tensor_functor I) (functor_identity IMOD) IModule_left_unitor_data.
-Proof.
-  intros x y f.
-  apply IModule_Mor_equiv.
-  apply skewmonoidal_unitl_ax.
-Qed.
-*)
-
-
-(* Definition IModule_left_unitor : left_unitor tensorM I := make_nat_trans _ _ _ IModule_left_unitor_is_nat_trans. *)
-
-(* the category of IModules do not have right unitor for IModules *)
+(* the category of IModules do not have right unitor for the ususal tensor *)
 
 
 (* associator *)
@@ -882,29 +799,6 @@ Definition IModule_assoc x y z : IModule_Mor ( (x ⊗ y) ⊗M z)
 
 Notation αM := IModule_assoc.
 
-(*
-(* (- ⊗ =) ⊗ ≡  (from assoc_left) *)
-Definition assoc_leftM : (V ⊠ V) ⊠ IMOD ⟶ IMOD :=
-  functor_composite (pair_functor tensor (functor_identity _)) IModule_tensor_functor.
-
-(* - ⊗ (= ⊗ ≡) *)
-Definition assoc_rightM : (V ⊠ V) ⊠ IMOD ⟶ IMOD :=
-  functor_composite
-    (precategory_binproduct_unassoc _ _ _)
-    (functor_composite (pair_functor (functor_identity _) IModule_tensor_functor) IModule_tensor_functor).
-
-Lemma IModule_associator_is_nat_trans :
-  is_nat_trans assoc_leftM assoc_rightM 
-               (fun x => IModule_associator_data
-                        (pr1 (pr1 x) : V ) (pr2 (pr1 x)) (pr2 x)).
-Proof.
-  intros x y f.
-  apply IModule_Mor_equiv.
-  apply skewmonoidal_assoc_ax.
-Qed.
-*)
-
-(* Definition IModule_associator : associator tensorM := make_nat_trans _ _ _ IModule_associator_is_nat_trans. *)
 
 
 (** Any monoid morphism induces a source-module structure on the target, and I is
@@ -990,7 +884,6 @@ Definition IModule_from_monoid (X : skewMonoid V)
 
 
 
-
 (** unit of a monoid is a module morphism *)
 Lemma unit_IModule_Mor_laws 
       (X : skewMonoid V) : IModule_Mor_laws   IModule_I
@@ -1018,13 +911,9 @@ Definition unit_IModule_Mor
 
 
 
-(** * Pointed I-modules
+(** * The quotiented tensor on IModules
 
 
-
-Is there a right unitor for the category of IModules ?
-
-r ; ρ postcomposed with the projection κ yields κ
 
  *)
 
@@ -1032,7 +921,7 @@ r ; ρ postcomposed with the projection κ yields κ
 
 (* We suppose that the category has coequalizers, and that the left tensor preserves them *)
 Context (coeqsV : Coequalizers V)
-        (tensorl_coeqs : preserves_colimit_of_shape (φ₂ tensor I) Coequalizer_graph).
+        (tensorl_coeqs : preserves_colimits_of_shape (φ₂ tensor I) Coequalizer_graph).
 Definition IModule_Coequalizers : Coequalizers IMOD.
 Proof.
   intros M M' u v.
@@ -1041,7 +930,7 @@ Proof.
     eapply (eq_diag_liftcolimcocone (C := make_category V hsV) ); revgoals.
     + apply coeqsV.
     + apply sym_eq_diag.
-      apply (mapdiagram_coequalizer_eqdiag (D := make_category _ hsV)).
+      apply (mapdiagram_coequalizer_eq_diag (D := make_category _ hsV)).
   - apply tensorl_coeqs.
 Defined.
 
@@ -1211,7 +1100,7 @@ Definition IModule_tensor'_on_mor
            (f' : IModule_Mor X' Y') :
   IModule_Mor (X ⊗M' X') (Y ⊗M' Y').
 Proof.
-  unshelve eapply (CoequalizerOfArrows ( C:= IMOD)).
+  unshelve eapply (CoequalizerOfArrows IMOD).
   - exact ((f #⊗ identity I) #⊗M f').
   - exact (f #⊗M f').
   - apply IModule_Mor_equiv.
@@ -1380,7 +1269,6 @@ Proof.
   unshelve eapply (@V_IModules_assoc_postcomp Y IM _ _ X).
 Qed.
 
-(* TODO:think about it: Not in the definition of strength !!! *)
 Definition alphaVM_lambda_eq a b :
    αVM I a b · λ' (a ⊗M' b) = λM a #⊗ identity _ · κ a b.
 Proof.
@@ -1390,9 +1278,6 @@ Proof.
   apply cancel_postcomposition.
   apply skewmonoidal_alpha_lambda_eq.
 Qed.
-(* Lemma IModule_unitr'_data (X : IModule) : *)
-(*    X --> (X ⊗M' IM) . *)
-(*                             : IModule_Mor _ _)). *)
 
 Lemma make_IModule'_eq_aux {X} (s : X ⊗ I --> X)
   (eq2 : αVM X IM IM · identity X #⊗ λM' IM · s = s #⊗ identity I · s) :
@@ -1554,49 +1439,13 @@ Definition PtIModule_unit_Mor (X : PtIModule) : PtIModule_Mor PtIModule_I X
 
 Definition precategory_PtIModule := coslice_precat precategory_IModule IM (has_homsets_IModule _).
 
-(* I use a specific definition rather than the standard one, so as to use my coercion *)
 Definition forget_PtIModules_IModules : functor precategory_PtIModule precategory_IModule
   := coslicecat_to_cat (C := precategory_IModule) IM (has_homsets_IModule IM).
-(*
-Proof.
-  use make_functor.
-  + use tpair.
-    - exact IModule_from_PtIModule.
-    - intros a b. apply pr1.
-  + abstract ( split; [intro; apply idpath | red; intros; apply idpath] ).
-Defined.
-*)
 
 Definition forget_PtIModules : functor precategory_PtIModule V :=
   forget_PtIModules_IModules ∙ forget_IModules.
 
 
-(* (* TODO prouver que κ est naturel *) *)
-(* Lemma V_PtIModules_assoc_ax {X X' : V}{Y Z Y' Z': PtIModule} : X ⊗ Y ⊗ Z --> X ⊗ (Y ⊠M Z) *)
-
-(*
-Lemma V_PtIModules_assoc_postcomp
-           (X : V){Y Z : PtIModule} {W : IModule}
-           (f : IModule_Mor (Y ⊗M Z)  W)
-           (eq : α' Y I Z · identity Y #⊗ λ' Z · f = σ Y #⊗ identity Z · f )
-  : α' X Y Z · identity X #⊗ f = 
-    V_PtIModules_assoc X Y Z · identity X #⊗ IModule_tensor'_Out_M f eq.
-Proof.
-    rewrite <- (IModule_tensor'_Out_M_eq f eq).
-    etrans; [ apply cancel_precomposition, (functor_comp (φ₁ tensor X))|].
-    apply assoc.
-Qed.
-*)
-(*
-    rewrite assoc.
-  }
-  etrans;[|apply assoc].
-  apply cancel_precomposition.
-  etrans;[|apply (functor_comp (φ₁ tensor X))].
-  apply (maponpaths (# (φ₁ tensor X))).
-  apply  pathsinv0.
-  apply CoequalizerArrowComm.
-*)
 
 
 Definition PtIModule_from_monoid (X : skewMonoid V) : PtIModule :=
