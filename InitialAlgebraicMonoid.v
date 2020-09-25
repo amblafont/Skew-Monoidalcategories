@@ -178,7 +178,11 @@ Lemma bc_id_tensor {a b c d : V} (ccab : BinCoproduct _ a b) (f : V ⟦ c , d �
   identity ccab #⊗ f = BinCoproductOfArrows  _ (tensor_left_bp_gen ccab _)
                                              (tensor_left_bp_gen ccab _) (identity _ #⊗ f)(identity _ #⊗ f).
 Proof.
-  etrans;[eapply (maponpaths (fun z => z #⊗ _)), pathsinv0, BinCoproductOfIdentities|].
+  etrans.
+  {
+    eapply (maponpaths (fun z => z #⊗ _)).
+    apply BinCoproductOfIdentities.
+  }
   apply BinCoproductOfArrows_tensor.
 Qed.
 
@@ -430,11 +434,11 @@ Proof.
   cbn.
   (* unfold BinCoproduct_of_functors_ob, pr1_functor,pr2_functor, BinCoproduct_of_functors_mor,stH_data; cbn. *)
   etrans;[apply cancel_postcomposition,BinCoproductOfArrows_tensor|].
-  etrans;[apply (BinCoproductOfArrows_comp' _ (tensor_left_bp _ _ _) (tensor_left_bp _ _ _)  )|].
+  etrans;[apply (BinCoproductOfArrows_comp'  (tensor_left_bp _ _ _) (tensor_left_bp _ _ _)  )|].
   etrans; revgoals.
   {
     apply pathsinv0.
-    apply (BinCoproductOfArrows_comp' _ (tensor_left_bp _ _ _)  ).
+    apply (BinCoproductOfArrows_comp'  (tensor_left_bp _ _ _)  ).
   }
   apply map_on_two_paths.
   - rewrite id_left,id_right.
@@ -506,7 +510,7 @@ Proof.
   unfold stH_data,BinCoproduct_of_functors_mor.
   cbn -[A].
   apply pathsinv0.
-  etrans;[apply (BinCoproductOfArrows_comp' _ (tensor_left_bp _ _ _))|].
+  etrans;[apply (BinCoproductOfArrows_comp' (tensor_left_bp _ _ _))|].
   cbn.
   now rewrite id_right.
 Qed.
@@ -638,9 +642,9 @@ Proof.
         apply cancel_postcomposition.
         apply BinCoproductOfArrows_tensor.
       }
-      eapply   (BinCoproductOfArrows_comp' _ (tensor_left_bp_gen (tensor_left_bp_gen _ _) _) (tensor_left_bp_gen _ _)).
+      eapply   (BinCoproductOfArrows_comp' (tensor_left_bp_gen (tensor_left_bp_gen _ _) _) (tensor_left_bp_gen _ _)).
     }
-    eapply   (BinCoproductOfArrows_comp' _ (tensor_left_bp_gen (tensor_left_bp_gen _ _) _) ).
+    eapply   (BinCoproductOfArrows_comp' (tensor_left_bp_gen (tensor_left_bp_gen _ _) _) ).
   }
   etrans;[apply (precompWithBinCoproductArrow _ (tensor_left_bp_gen (tensor_left_bp_gen _ _) _))|].
   eapply map_on_two_paths; [|apply idpath].
@@ -1062,7 +1066,7 @@ Proof.
   unfold A_action_aux.
   rewrite assoc.
   apply cancel_postcomposition.
-  etrans;[use   (BinCoproductOfArrows_comp' _ (tensor_left_bp _ _ _))|].
+  etrans;[use   (BinCoproductOfArrows_comp' (tensor_left_bp _ _ _))|].
   now rewrite id_right,id_left.
 Qed.
 

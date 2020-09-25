@@ -102,6 +102,44 @@ End Theorem47.
 
 Local Infix ",," := bindelta_pair_functor  : functor_scope .
 
+(** id + id = id *)
+Lemma BinCoproductOfIdentities
+           {C : precategory}   {a b : C}
+           (ccab : BinCoproduct C a b) :
+  identity ccab = BinCoproductOfArrows _ ccab ccab (identity a) (identity b).
+Proof.
+  apply BinCoproduct_endo_is_identity.
+  - etrans;[apply BinCoproductOfArrowsIn1|apply id_left].
+  - etrans;[apply BinCoproductOfArrowsIn2|apply id_left].
+Qed.
+
+(* A version of BinCoproductOfArrows with given bincoproducts
+TODO: upload in Unimath
+ *)
+Definition BinCoproductOfArrows_comp'
+           {C : precategory}   {a b c d x y : C}
+           (ccab : BinCoproduct C a b)(cccd : BinCoproduct C c d)
+           (ccxy : BinCoproduct C x y)
+           (f : C ⟦ a, c ⟧) (f' : C ⟦ b, d ⟧)
+(g : C ⟦ c, x ⟧) (g' : C ⟦ d, y ⟧) 
+  : BinCoproductOfArrows _ ccab cccd f f' ·
+    BinCoproductOfArrows _ _ _ g g'
+    =
+    BinCoproductOfArrows _ _ ccxy (f · g) (f' · g').
+Proof.
+  apply BinCoproductArrowUnique.
+  - rewrite assoc.
+    rewrite BinCoproductOfArrowsIn1.
+    rewrite <- assoc.
+    rewrite BinCoproductOfArrowsIn1.
+    apply assoc.
+  - rewrite assoc.
+    rewrite BinCoproductOfArrowsIn2.
+    rewrite <- assoc.
+    rewrite BinCoproductOfArrowsIn2.
+    apply assoc.
+Qed.
+
 
 Lemma binprod_functor_combine_morphisms {C D E : precategory} (F : C ⊠ D ⟶ E)
       {c c'} (f : C ⟦ c , c' ⟧)
