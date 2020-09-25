@@ -13,8 +13,8 @@ Foundations, MoreFoundations, Combinatorics, Algebra, NumberSystems,
 CategoryTheory.
 
 This was tested with:
-- Coq 8.11
-- UniMath commit version 47f5efb58a6ff78beb7f67e399eda00875a5afd
+- Coq 8.12
+- UniMath commit version 4ec6e2b36dffca9b53c3fb9f6d69ae74a2a67d52
 
 
 
