@@ -1381,6 +1381,7 @@ Definition PtIModule_unitr (X : PtIModule) :
   PtIModule_Mor X (X ⊠M IP) :=
   make_PtIModule_Mor (Y := X ⊠M IP) (ρM' X) (IModule_unitr'_ax _).
 
+(* TODO: decomposer ca *)
 Lemma IModule_unitl'_unit (X : PtIModule) :
   ε (IP ⊠M X) · λM' X = ε X.
 Proof.
@@ -1451,5 +1452,65 @@ Definition forget_PtIModules : functor precategory_PtIModule V :=
 Definition PtIModule_from_monoid (X : skewMonoid V) : PtIModule :=
   IModule_from_monoid X ,, unit_IModule_Mor X.
 
+Lemma pt_imodule_eq_tr
+      (Q : V -> Type)
+      (m : forall (x : PtIModule), Q x )
+      (x : V)
+      {f1 f2} 
+      (eqf : f1 = f2)
+      (e1 : IModule_laws (make_IModule_data x f1))
+      (e2 : IModule_laws (make_IModule_data x f2))
+      (x1 := (make_IModule_data x f1 ,, e1 : IModule))
+      (x2 := (make_IModule_data x f2 ,, e2 : IModule))
+      (u1 u2 : I --> x)
+      (* pas forcement necessaire *)
+      (equ : u1 = u2)
+  (hu1 : IModule_Mor_laws IP x1 u1)
+  (hu2 : IModule_Mor_laws IP x2 u2)
+      (um1 := u1 ,, hu1 : IModule_Mor IM x1)
+      (um2 := u2 ,, hu2 : IModule_Mor IM x2)
+      (xp1 := x1 ,, um1 : PtIModule)
+      (xp2 := x2 ,, um2 : PtIModule)
+  :
+    m xp1 = m xp2.
+Proof.
+  cbv.
+  induction eqf.
+  induction equ.
+  assert (eqe : e1  = e2).
+  {
+    apply proofirrelevance.
+    apply isaprop_IModule_laws.
+  }
+  induction eqe.
+  assert(heq : hu1 = hu2).
+  apply (proofirrelevance _ (isaprop_IModule_Mor_laws IP x1 u1)).
+  induction heq.
+  apply paths_refl.
+Qed.
+Corollary pt_imodule_eq (x : V)
+      {f1 f2} 
+      (eqf : f1 = f2)
+      (e1 : IModule_laws (make_IModule_data x f1))
+      (e2 : IModule_laws (make_IModule_data x f2))
+      (x1 := (make_IModule_data x f1 ,, e1 : IModule))
+      (x2 := (make_IModule_data x f2 ,, e2 : IModule))
+      (u1 u2 : I --> x)
+      (* pas forcement necessaire *)
+      (equ : u1 = u2)
+  (hu1 : IModule_Mor_laws IP x1 u1)
+  (hu2 : IModule_Mor_laws IP x2 u2)
+      (um1 := u1 ,, hu1 : IModule_Mor IM x1)
+      (um2 := u2 ,, hu2 : IModule_Mor IM x2)
+      (xp1 := x1 ,, um1 : PtIModule)
+      (xp2 := x2 ,, um2 : PtIModule)
+
+  :
+    xp1 = xp2.
+Proof.
+apply (pt_imodule_eq_tr (fun _ => PtIModule) (fun x => x)).
+apply eqf.
+apply equ.
+Qed.
 End IModule_Definition.
 Arguments PtIModule_Mor {_}{_} _ _.

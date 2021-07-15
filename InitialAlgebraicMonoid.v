@@ -1561,7 +1561,19 @@ Local Notation μ := (sm_mult _).
 
 Local Notation κ := am_alg .
 
-Axiom myadmit : forall A, A.
+
+
+Lemma stXAM X : st X AM = st X AM'.
+Proof.
+  Check (st X).
+  apply (pt_imodule_eq_tr V hsV (fun (B : V) => V ⟦ F X ⊗ (B : V), F (X ⊗ B) ⟧) (st X)).
+  - cbn.
+    apply pathsinv0.
+    apply Aunitr_aux.
+
+  - cbn.
+  reflexivity.
+Qed.
 
 Lemma Fmonoid_equation_Galg
       (X : algMonoid st)
@@ -1595,12 +1607,7 @@ Proof.
     eapply usual_eq2.
     exact (! μA_ax2).
   }
-  assert (heq : st A AM = st A AM').
-  {
-    apply myadmit.
-    (* exact (maponpaths_AM (fun Y => V ⟦ F _ ⊗  Y, F (_ ⊗  Y) ⟧) (st A)). *)
-  }
-  rewrite heq.
+  rewrite stXAM.
   apply idpath.
 Qed.
 
@@ -1869,5 +1876,6 @@ Definition A_isInitial : isInitial (precategory_algMonoid st) A_Fmonoid :=
 
 Definition algMonoid_Initial : Initial (precategory_algMonoid st) :=
   make_Initial _ A_isInitial.
+
 
 End A.
