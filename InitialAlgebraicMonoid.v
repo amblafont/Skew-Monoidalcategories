@@ -3,6 +3,7 @@ Construction of an initial F-monoid, for F a strengthened endofunctor
 (in the skew-monoidal setting): [algMonoid_Initial]
 **)
 
+Require Import UniMath.MoreFoundations.PartA.
 Require Import UniMath.Foundations.PartD.
 Require Import UniMath.MoreFoundations.Tactics.
 Require Import UniMath.CategoryTheory.Core.Categories.
@@ -37,13 +38,13 @@ Local Notation "'π₁'" := (pr1_functor _ _) : functor_scope.
 Local Notation "'π₂'" := (pr2_functor _ _) : functor_scope.
 Delimit Scope functor_scope with F.
 
-Local Notation "( c , d )" := (make_precatbinprod c d).
-Local Notation "( f #, g )" := (precatbinprodmor f g).
-Local Notation "C ⊠ D" := (precategory_binproduct C D) (at level 38).
+Local Notation "( c , d )" := (make_catbinprod c d).
+Local Notation "( f #, g )" := (catbinprodmor f g).
+Local Notation "C ⊠ D" := (category_binproduct C D) (at level 38).
 Local Infix "+" := (BinCoproductOfArrows _ _ _) : morphism_scope.
 
-Local Notation ι₁ := (BinCoproductIn1 _ _).
-Local Notation ι₂ := (BinCoproductIn2 _ _).
+Local Notation ι₁ := (BinCoproductIn1 _).
+Local Notation ι₂ := (BinCoproductIn2 _).
 
 Local Notation carrier := (alg_carrier _ ).
 
@@ -54,11 +55,8 @@ Local Notation φ₂ := (functor_fix_snd_arg _ _ _).
 
 
 Section A.
-Context (V : skewmonoidal_precategory).
-(* homsets *)
-Context (hsV : has_homsets V).
+Context (V : skewmonoidal_category).
 
-Let Vcat : category := make_category V hsV.
 
 
 Declare Scope object_scope.
@@ -78,18 +76,18 @@ Notation α' := (skewmonoidal_assoc (data_from_skewmonoidal V)).
 Notation λ' := (skewmonoidal_unitl (data_from_skewmonoidal V)).
 Notation ρ := (skewmonoidal_unitr (data_from_skewmonoidal V)).
 
-Notation M := (precategory_PtIModule V hsV).
+Notation M := (category_PtIModule V).
 
-Notation IMod := (IModule V hsV).
-Notation PIMod := (PtIModule V hsV).
+Notation IMod := (IModule V).
+Notation PIMod := (PtIModule V).
 
-(* Notation M := (precategory_IModule V hsV). *)
-(* Notation tensorM := (IModule_tensor_functor V hsV). *)
+(* Notation M := (category_IModule V). *)
+(* Notation tensorM := (IModule_tensor_functor V). *)
 (* Notation "X ⊗ Y" := (tensorM ((X : M) , (Y : M)))  : module_scope. *)
 (* Delimit Scope module_scope with M. *)
 
 (** as modules *)
-Notation IM := (PtIModule_I V hsV).
+Notation IM := (PtIModule_I V).
 Infix "⊗M" := (IModule_tensor V) (at level 31).
 Local Notation σ := (im_action _).
 (* Let λM := (IModule_left_unitor_data V). *)
@@ -109,8 +107,8 @@ Infix "×" := pair_functor  : functor_scope .
 Delimit Scope functor_scope with F.
 
 (* Notation "'v' X" := (X : IModule _) (at level 3). *)
-Notation M_V := (forget_IModules _ hsV).
-Notation pM_V := (forget_PtIModules _ hsV).
+Notation M_V := (forget_IModules _).
+Notation pM_V := (forget_PtIModules _).
 
 
 (** _ ⊗ X is omega cocontinuous *)
@@ -128,7 +126,7 @@ Qed.
 
 Definition tensor_isInitial {o : V}(Io : isInitial _ o)(X : V) :
   isInitial _ (o ⊗ X) :=
-  cocont_preserves_isInitial  (C := Vcat)(D := Vcat) (ltensor_cc X) Io.
+  cocont_preserves_isInitial  (C := V)(D := V) (ltensor_cc X) Io.
 
 
 Local Definition O_tensor_X_isInitial (X : V) : isInitial _ (O ⊗ X) :=
@@ -137,22 +135,22 @@ Local Definition O_tensor_X_isInitial (X : V) : isInitial _ (O ⊗ X) :=
 Local Definition O_tensor_X_Initial (X : V) : Initial V :=
   make_Initial _ (O_tensor_X_isInitial X).
 
-Local Definition tensor_left_isBinCoproduct {A B : V} (ccAB : BinCoproduct _ A B) (C : V) :
+Local Definition tensor_left_isBinCoproduct {A B : V} (ccAB : BinCoproduct A B) (C : V) :
   isBinCoproduct _ (A ⊗ C) (B ⊗ C) (ccAB ⊗ C)
-                 (# (φ₂ tensor C) (BinCoproductIn1 _ _))
-                  (# (φ₂ tensor C) (BinCoproductIn2 _ _)) :=
-   cocont_preserves_isBinCoproduct (C := Vcat)(D := Vcat)
+                 (# (φ₂ tensor C) (BinCoproductIn1 _))
+                  (# (φ₂ tensor C) (BinCoproductIn2 _)) :=
+   cocont_preserves_isBinCoproduct (C := V)(D := V)
                                          (ltensor_cc C) ccAB.
 
 
-Definition tensor_left_bp_gen {A B : V} (ccAB : BinCoproduct _ A B)(C : V) : BinCoproduct _ (A ⊗ C) (B ⊗ C) :=
+Definition tensor_left_bp_gen {A B : V} (ccAB : BinCoproduct A B)(C : V) : BinCoproduct (A ⊗ C) (B ⊗ C) :=
   make_BinCoproduct _ _ _ _ _ _ (tensor_left_isBinCoproduct ccAB C).
 
-Definition tensor_left_bp (A B : V) (C : V) : BinCoproduct _ (A ⊗ C) (B ⊗ C) := tensor_left_bp_gen (A + B) C.
+Definition tensor_left_bp (A B : V) (C : V) : BinCoproduct (A ⊗ C) (B ⊗ C) := tensor_left_bp_gen (A + B) C.
 
-Lemma BinCoproductArrow_tensor {w x y z1 z2 : V}(ccxy : BinCoproduct _ w x)
+Lemma BinCoproductArrow_tensor {w x y z1 z2 : V}(ccxy : BinCoproduct w x)
       (f : V ⟦ w , y ⟧)(g : V ⟦ x , y ⟧)(u : V ⟦ z1 , z2 ⟧) :
-  (BinCoproductArrow _ ccxy f g ) #⊗ u = BinCoproductArrow _ (tensor_left_bp_gen ccxy z1)
+  (BinCoproductArrow ccxy f g ) #⊗ u = BinCoproductArrow (tensor_left_bp_gen ccxy z1)
                                                                     (f #⊗ u)(g #⊗ u).
 Proof.
   use (BinCoproductArrowUnique _ _ _ (tensor_left_bp_gen _ _));
@@ -162,7 +160,7 @@ Proof.
   - apply BinCoproductIn2Commutes .
 Qed.
 
-Lemma BinCoproductOfArrows_tensor {w x y1 y2 z1 z2 : V}(ccxy : BinCoproduct _ w x) (ccys : BinCoproduct _ y1 y2)
+Lemma BinCoproductOfArrows_tensor {w x y1 y2 z1 z2 : V}(ccxy : BinCoproduct w x) (ccys : BinCoproduct y1 y2)
       (f : V ⟦ w , y1 ⟧)(g : V ⟦ x , y2 ⟧)(u : V ⟦ z1 , z2 ⟧) :
   (BinCoproductOfArrows _ ccxy ccys f g ) #⊗ u = BinCoproductOfArrows _ (tensor_left_bp_gen ccxy z1)
                                                                                (tensor_left_bp_gen ccys z2)
@@ -174,7 +172,7 @@ Proof.
     apply (maponpaths (fun z => _ #⊗ z)), pathsinv0 , id_right.
 Qed.
 
-Lemma bc_id_tensor {a b c d : V} (ccab : BinCoproduct _ a b) (f : V ⟦ c , d ⟧) :
+Lemma bc_id_tensor {a b c d : V} (ccab : BinCoproduct a b) (f : V ⟦ c , d ⟧) :
   identity ccab #⊗ f = BinCoproductOfArrows  _ (tensor_left_bp_gen ccab _)
                                              (tensor_left_bp_gen ccab _) (identity _ #⊗ f)(identity _ #⊗ f).
 Proof.
@@ -191,7 +189,7 @@ Lemma usual_eq1 {X a b c A : V}   (v' : V ⟦ c ⊗ X , A ⟧)
   {vv1 : V ⟦ a ⊗ X, A ⟧}
   {vv2 : V ⟦ b ⊗ X, A ⟧}
   (veq : (u #⊗ identity (X)) · v' =
-         BinCoproductArrow V (tensor_left_bp _ _ _) vv1 vv2) :
+         BinCoproductArrow  (tensor_left_bp _ _ _) vv1 vv2) :
   ((ι₁ · u) #⊗ identity  X) · v' = vv1.
 Proof.
   etrans.
@@ -209,7 +207,7 @@ Lemma usual_eq2 {X a b c A : V}   (v' : V ⟦ c ⊗ X , A ⟧)
   {vv1 : V ⟦ a ⊗ X, A ⟧}
   {vv2 : V ⟦ b ⊗ X, A ⟧}
   (veq : (u #⊗ identity (X)) · v' =
-         BinCoproductArrow V (tensor_left_bp _ _ _) vv1 vv2) :
+         BinCoproductArrow (tensor_left_bp _ _ _) vv1 vv2) :
   ((ι₂ · u) #⊗ identity  X) · v' = vv2.
 Proof.
   etrans.
@@ -230,8 +228,8 @@ Qed.
 
 Lemma rho_bincoproduct_postcomp_eq {X : V}{Y : V}{Z : V}
       (f : V ⟦ X ⊗ I, Z ⟧)(g : V ⟦ Y ⊗ I , Z⟧)
-  : ρ (X + Y) · (BinCoproductArrow _ (tensor_left_bp _ _ _) f g) =
-        BinCoproductArrow _ (bc _ _) (ρ X · f)(ρ Y · g).
+  : ρ (X + Y) · (BinCoproductArrow (tensor_left_bp _ _ _) f g) =
+        BinCoproductArrow (bc _ _) (ρ X · f)(ρ Y · g).
 Proof.
   rewrite rho_bincoproduct_eq.
   apply (precompWithBinCoproductArrow _ (bc _ _)(tensor_left_bp _ _ _)  ).
@@ -333,7 +331,7 @@ Lemma  lemma48 :
            ∏ F (st : spec_st2 F)
              (Fromega : ∏ X, is_omega_cocont (φ₁ F X) )(Z : V) ,
            isPInitial st
-                      (alg_map _ (InitialObject (colimAlgInitial hsV O (Fromega Z) (Vch (initChain O _))))).
+                      (alg_map _ (InitialObject (colimAlgInitial O (Fromega Z) (Vch (initChain O _))))).
 Proof.
   intros F st Fromega Z P C c.
   set (J := φ₂ tensor P).
@@ -342,13 +340,13 @@ Proof.
                                                            (functor_identity V × J)%F ∙ ((J × functor_identity V)%F ∙ F)).
   (* (J × J)%F ∙ F *)
   
-  unshelve eset (h := Thm47_mor hsV O Vch hsV Vch (J := J) _ _ (F := F) _
+  unshelve eset (h := Thm47_mor O Vch Vch (J := J) _ _ (F := F) _
                        (G := (J × functor_identity _)%F ∙ F ) _ (K := functor_identity _) st' c); revgoals.
   {
     use unique_exists.
     + exact h.
     + cbn.
-      etrans; [| use (Thm47_commutes hsV O Vch hsV Vch (J := J) _ _ (F := F) _ _ st' c)].
+      etrans; [| use (Thm47_commutes O Vch Vch (J := J) _ _ (F := F) _ _ st' c)].
       cbn.
       unfold st2_pw,nat_trans_fix_snd_arg_data,functor_fix_snd_arg_mor; cbn.
       apply cancel_postcomposition.
@@ -358,10 +356,10 @@ Proof.
       apply dirprod_paths; [|apply idpath].
       cbn.
       apply pathsinv0, (functor_id tensor (Z , P)).
-    + intro y. apply hsV.
+    + intro y. apply homset_property.
     + cbn.
       intros y eq.
-      use (Thm47_unique hsV O Vch hsV Vch (J := J) _ _ (F := F) _ _ st' c).
+      use (Thm47_unique O Vch Vch (J := J) _ _ (F := F) _ _ st' c).
       etrans;[|apply eq].
       cbn.
       unfold st2_pw,nat_trans_fix_snd_arg_data,functor_fix_snd_arg_mor; cbn.
@@ -375,26 +373,27 @@ Proof.
       apply (functor_id tensor (Z , P)).
   }
   - intro b.
-    eapply (is_omega_cocont_iso hsV );[|apply Fromega].
-    use (nat_iso_to_iso (C := Vcat) (D := Vcat)).
+    eapply (is_omega_cocont_z_iso );[|apply Fromega].
+    use iso_to_z_iso.
+    apply nat_iso_to_iso.
     apply lemma48_iso_aux.
   - use (ltensor_cc P).
   - use O_tensor_X_isInitial.
 Qed.
 
 
-Context (F : V ⟶ V) (st : strength hsV coeqsV tensorl_coeqs F) (Fomega: is_omega_cocont F).
+Context (F : V ⟶ V) (st : strength coeqsV tensorl_coeqs F) (Fomega: is_omega_cocont F).
 
-Infix "⊠M" := (PtIModule_tensor V hsV coeqsV tensorl_coeqs) (at level 31).
-Infix "⊗M'" := (IModule_tensor' V hsV coeqsV tensorl_coeqs) (at level 31).
-Infix "#⊗M'" := (IModule_tensor'_on_mor V hsV coeqsV tensorl_coeqs) (at level 31).
-Notation π := (IModule_tensor'_proj V hsV coeqsV tensorl_coeqs).
-Local Notation αVM := (V_IModules_assoc V hsV coeqsV tensorl_coeqs).
-Local Notation λP := (PtIModule_unitl V hsV coeqsV tensorl_coeqs).
-Notation IP := (PtIModule_I V hsV).
-Notation σ' := (PtIModule_action V hsV coeqsV tensorl_coeqs).
-Notation ϵ := (im_unit V hsV).
-Notation ϵPt := (PtIModule_unit_Mor V hsV).
+Infix "⊠M" := (PtIModule_tensor V coeqsV tensorl_coeqs) (at level 31).
+Infix "⊗M'" := (IModule_tensor' V coeqsV tensorl_coeqs) (at level 31).
+Infix "#⊗M'" := (IModule_tensor'_on_mor V coeqsV tensorl_coeqs) (at level 31).
+Notation π := (IModule_tensor'_proj V coeqsV tensorl_coeqs).
+Local Notation αVM := (V_IModules_assoc V coeqsV tensorl_coeqs).
+Local Notation λP := (PtIModule_unitl V coeqsV tensorl_coeqs).
+Notation IP := (PtIModule_I V).
+Notation σ' := (PtIModule_action V coeqsV tensorl_coeqs).
+Notation ϵ := (im_unit V).
+Notation ϵPt := (PtIModule_unit_Mor V).
 (* Let stF_nat :=  (st : nat_trans _ _ ). *)
 (* Local Definition st (X : V) (Y : M) : V ⟦ F X ⊗ (v Y) , F (X ⊗ (v Y)) ⟧ := *)
 (*   stF_nat (X ,, Y). *)
@@ -458,34 +457,35 @@ Definition sumFI :=
 Lemma G_is_sumFI :
   G = sumFI.
 Proof.
-  apply functor_eq; [exact hsV |].
+  apply functor_eq .
+  apply homset_property.
   apply idpath.
 Qed.
 
 Definition Homega  : is_omega_cocont H.
 Proof.
-  use (is_omega_cocont_BinCoproduct_of_functors _ hsV).
-  - use (is_cocont_pr1_functor hsV).
-  - use (is_omega_cocont_functor_composite hsV).
-    + use (is_cocont_pr2_functor hsV).
+  use (is_omega_cocont_BinCoproduct_of_functors _).
+  - use (is_cocont_pr1_functor).
+  - use (is_omega_cocont_functor_composite).
+    + use (is_cocont_pr2_functor).
     + exact Fomega.
 Qed.
 
 
 Definition Homega2 (X : V) : is_omega_cocont (φ₁ H X) :=
-  is_omega_cocont_fix_fst_arg hsV hsV hsV Homega X.
+  is_omega_cocont_fix_fst_arg   Homega X.
 
 Definition Gomega : is_omega_cocont G := Homega2 I.
 
 (* Our candidate: the initial algebra of G = I + F *)
-Definition Ai := colimAlgInitial hsV O Gomega (Vch (initChain O G)).
+Definition Ai := colimAlgInitial O Gomega (Vch (initChain O G)).
 
 Definition A := alg_carrier _ (InitialObject Ai).
 
 
 Lemma A_is_InitialAlg_sumFI :
   A = alg_carrier sumFI
-                  (InitialObject (colimAlgInitial hsV O
+                  (InitialObject (colimAlgInitial O
                                    (transportf is_omega_cocont G_is_sumFI Gomega)
                                    (Vch (initChain O sumFI)))).
 Proof.
@@ -533,8 +533,8 @@ Qed.
 
 Definition A_Galg_mor_coprod_commutes (P : PIMod) {C : V}  u 
            (c1 : V ⟦ I ⊗ P , C ⟧)(c2 : V ⟦ F C, C ⟧)
-  (c := BinCoproductArrow _ (bc _ _) c1 c2) :
-  (BinCoproductArrow  _ (tensor_left_bp I (F A) _) 
+  (c := BinCoproductArrow (bc _ _) c1 c2) :
+  (BinCoproductArrow  (tensor_left_bp I (F A) _) 
                         c1
                         (st A P · # F u · c2)
                         =
@@ -570,8 +570,8 @@ Qed.
 
 Definition A_Galg_mor_unique' (P : PIMod) {C : V}  u 
            (c1 : V ⟦ I ⊗ P , C ⟧)(c2 : V ⟦ F C, C ⟧)
-  (c := BinCoproductArrow _ (bc _ _) c1 c2) :
-  (BinCoproductArrow  _ (tensor_left_bp I (F A) _) 
+  (c := BinCoproductArrow (bc _ _) c1 c2) :
+  (BinCoproductArrow  (tensor_left_bp I (F A) _) 
                         c1
                         (st A P · # F u · c2)
   =
@@ -586,12 +586,12 @@ Qed.
 
 
 Definition A_Galg_mor_eq (P : PIMod) {C : V} (c1 : V ⟦ P , C ⟧)(c2 : V ⟦ F C , C ⟧) u w :
-  (BinCoproductArrow  _ (tensor_left_bp I (F A) _) 
+  (BinCoproductArrow  (tensor_left_bp I (F A) _) 
                         (λ'  _ · c1) 
                         (st A P · # F u · c2)
   =
   (A_Galg #⊗ identity _) · u) ->
-  (BinCoproductArrow  _ (tensor_left_bp I (F A) _) 
+  (BinCoproductArrow  (tensor_left_bp I (F A) _) 
                         (λ'  _ · c1)
                         (st A P · # F w · c2)
   =
@@ -613,7 +613,7 @@ Definition A_Galg_mor2_equation {P Q : PIMod}{C : V} (γ1 : V ⟦ (I ⊗ P) ⊗ 
   (γ2 : V ⟦ F C , C ⟧) (u : V ⟦ (A ⊗ P) ⊗ Q  , C ⟧)
     : UU :=
    ((A_Galg #⊗ identity _) #⊗ identity _) · u =
-          BinCoproductArrow _ (tensor_left_bp_gen (tensor_left_bp_gen _ _) _) 
+          BinCoproductArrow (tensor_left_bp_gen (tensor_left_bp_gen _ _) _) 
                                γ1 ((st _ P #⊗ identity _) · st _ Q · # F u · γ2) .
 
 Hint Unfold functor_fix_snd_arg_mor BinCoproduct_of_functors_ob bincoproduct_functor BinCoproduct_of_functors_mor stH_data: functor.
@@ -626,9 +626,9 @@ Lemma A_Galg_mor2_eq_aux  {P Q : PIMod}{C : V} (γ₁ : V ⟦ (I ⊗ P) ⊗ Q , 
       (BinCoproductOfArrows _ (tensor_left_bp_gen _ _) (bc _ _) (identity _) (st _ Q)  )
       ·
       (BinCoproductOfArrows _ (bc _ _) (bc _ _) (((identity I) #⊗ (identity (P))) #⊗ identity Q) (# F u1))
-           · BinCoproductArrow _ (bc _ _) γ₁ γ₂ 
+           · BinCoproductArrow (bc _ _) γ₁ γ₂ 
    =
-  BinCoproductArrow V (tensor_left_bp_gen (tensor_left_bp_gen (π₁%F (I,, A) + (π₂%F ∙ F) (I,, A)) (P)) Q) γ₁
+  BinCoproductArrow (tensor_left_bp_gen (tensor_left_bp_gen (π₁%F (I,, A) + (π₂%F ∙ F) (I,, A)) (P)) Q) γ₁
                     (st A P #⊗ identity Q · st (A ⊗ P) Q · # F u1 · γ₂) .
 Proof.
   etrans.
@@ -667,7 +667,7 @@ Proof.
   set (T := fun (Z : PIMod) => φ₂ tensor Z).
   set (J := T P ∙ T Q).
   assert (Jomega :   is_omega_cocont J).
-  { apply (is_omega_cocont_functor_composite hsV); use ltensor_cc. }
+  { apply (is_omega_cocont_functor_composite); use ltensor_cc. }
 
   set (stT := fun Z => ( (nat_trans_fix_snd_arg _ _ _ _ _ stH (Z : M) )): H ∙ T _ ⟹
                                                            (functor_identity V × T Z)%F ∙ ((T Z × functor_identity V)%F ∙ H)).
@@ -679,21 +679,21 @@ Proof.
     }
     exact  (pre_whisker (T _ × T _)%F (stT _)).
   }
-  set (c := BinCoproductArrow _ (bc _ _) γ₁ γ₂) .
+  set (c := BinCoproductArrow (bc _ _) γ₁ γ₂) .
   (* A_Falg: V ⟦ (I ⊗ A) ⊗ A + F A , A ⟧ ). *)
 
-  use ( Thm47_eq hsV O Vch hsV Vch (J := J) _ _ (F := H) _
+  use ( Thm47_eq O Vch Vch (J := J) _ _ (F := H) _
                        (G := (J × functor_identity _)%F ∙ H ) _ (K := functor_identity _) st' c).
   - apply tensor_isInitial.
     apply tensor_isInitial.
     apply pr2.
   - exact Jomega.
   - exact Homega2.
-  - use (is_omega_cocont_fix_fst_arg hsV hsV hsV).
-    apply (is_omega_cocont_functor_composite hsV).
-    + use (is_omega_cocont_pair_functor _ _ hsV hsV hsV hsV).
+  - use (is_omega_cocont_fix_fst_arg).
+    apply (is_omega_cocont_functor_composite).
+    + use (is_omega_cocont_pair_functor _ _).
       * exact Jomega.
-      * apply (is_omega_cocont_functor_identity hsV).
+      * apply (is_omega_cocont_functor_identity _).
     + exact Homega.
   - etrans;[|exact (! eq1)].
     cbn.
@@ -716,13 +716,13 @@ Lemma general_lemma
       (w : V ⟦ A ⊗ Y , A ⟧)
   {vv1 : V ⟦ X, A ⟧}
   (veq : (A_Galg #⊗ identity X) · v' =
-         BinCoproductArrow V (tensor_left_bp _ _ _) (λ'  _ · vv1)
+         BinCoproductArrow (tensor_left_bp _ _ _) (λ'  _ · vv1)
        (st A X · # F v' · A_Falg))
   (* (eqw' :   A_Falg #⊗ identity (v Y) · w = st A Y · # F w · A_Falg) *)
   {w1 : V ⟦ Y, A ⟧}
   (* Actually, I only need the ι₂ e1 = ι₂ e2 of the following equation e1 = e2 *)
   (eqw' :   A_Galg #⊗ identity Y · w = 
-         BinCoproductArrow V (tensor_left_bp _ _ _) (λ'  _ · w1)
+         BinCoproductArrow (tensor_left_bp _ _ _) (λ'  _ · w1)
        (st A Y · # F w · A_Falg))
   (eqw : (vv1 #⊗ identity Y · w = π X Y · u · vv1))
   :
@@ -734,7 +734,7 @@ Proof.
         repeat rewrite assoc.
         apply cancel_postcomposition.
         apply cancel_postcomposition.
-        apply (V_IModules_assoc_ax _ _ _ _ _ (IModule_identity _ _)(IModule_identity _ _)).
+        apply (V_IModules_assoc_ax _ _ _ _  (IModule_identity _ _)(IModule_identity _ _)).
       }
       etrans.
       {
@@ -752,7 +752,7 @@ Proof.
       }
       cbn -[A A_Galg].
 (* A_action_ax : (λ'  I + st A IM · # F A_action)%m · A_Galg = A_Galg #⊗ identity I · A_action *)
-(* m_ax : BinCoproductArrow V (tensor_left_bp I (F A) A) (λ'  A) (st A AM · # F m · ι₂ · A_Galg) = A_Galg #⊗ identity A · m *)
+(* m_ax : BinCoproductArrow (tensor_left_bp I (F A) A) (λ'  A) (st A AM · # F m · ι₂ · A_Galg) = A_Galg #⊗ identity A · m *)
       etrans.
       {
         repeat rewrite <- assoc.
@@ -876,12 +876,12 @@ Lemma general_lemma'
       (w : V ⟦ A ⊗ Y , A ⟧)
   {vv1 : V ⟦ X, A ⟧}
   (veq : (A_Galg #⊗ identity X) · v' =
-         BinCoproductArrow V (tensor_left_bp _ _ _) (λ'  _ · vv1)
+         BinCoproductArrow (tensor_left_bp _ _ _) (λ'  _ · vv1)
        (st A X · # F v' · A_Falg))
   {w1 : V ⟦ Y, A ⟧}
   (* Actually, I only need the ι₂ e1 = ι₂ e2 of the following equation e1 = e2 *)
   (eqw' :   A_Galg #⊗ identity Y · w = 
-         BinCoproductArrow V (tensor_left_bp _ _ _) (λ'  _ · w1)
+         BinCoproductArrow (tensor_left_bp _ _ _) (λ'  _ · w1)
        (st A Y · # F w · A_Falg))
   (eqw :   w1 #⊗ identity X · v' = π Y X · u · vv1)
 
@@ -894,7 +894,7 @@ Proof.
         repeat rewrite assoc.
         apply cancel_postcomposition.
         apply cancel_postcomposition.
-        apply (V_IModules_assoc_ax _ _ _ _ _ (IModule_identity _ _)(IModule_identity _ _)).
+        apply (V_IModules_assoc_ax  _ _ _ _ (IModule_identity _ _)(IModule_identity _ _)).
       }
       etrans.
       {
@@ -912,7 +912,7 @@ Proof.
       }
       cbn -[A A_Galg].
 (* A_action_ax : (λ'  I + st A IM · # F A_action)%m · A_Galg = A_Galg #⊗ identity I · A_action *)
-(* m_ax : BinCoproductArrow V (tensor_left_bp I (F A) A) (λ'  A) (st A AM · # F m · ι₂ · A_Galg) = A_Galg #⊗ identity A · m *)
+(* m_ax : BinCoproductArrow (tensor_left_bp I (F A) A) (λ'  A) (st A AM · # F m · ι₂ · A_Galg) = A_Galg #⊗ identity A · m *)
       etrans.
       {
         repeat rewrite <- assoc.
@@ -1034,7 +1034,7 @@ Definition ηA : V ⟦ I , A ⟧ := ι₁ · A_Galg.
 (* The I-module structure *)
 
 Definition A_action_aux : V ⟦ I ⊗ I + F A, A ⟧ := (λ'  _ + identity _)%m · A_Galg.
-  (* BinCoproductArrow  _ (bc _ _) (λ'  _ · ι₁ · A_Galg) (ι₂ · A_Galg). *)
+  (* BinCoproductArrow (bc _ _) (λ'  _ · ι₁ · A_Galg) (ι₂ · A_Galg). *)
 
 
 (*
@@ -1096,7 +1096,7 @@ Proof.
   apply A_action_eq_aux.
 Qed.
 Lemma A_action_ax' :
-  BinCoproductArrow  _ (tensor_left_bp I (F A) I) 
+  BinCoproductArrow (tensor_left_bp I (F A) I) 
                         (λ'  _ · ηA)
                      (st A IM · # F A_action · A_Falg)
   =
@@ -1115,14 +1115,14 @@ Proof.
 Qed.
 
 Lemma identityA_Thm47_mor_eq :
-  identity A = (Thm47_mor hsV O Vch hsV Vch (J := functor_identity _) (pr2 O)
-                (is_omega_cocont_functor_identity hsV) (F := H)
+  identity A = (Thm47_mor O Vch Vch (J := functor_identity _) (pr2 O)
+                (is_omega_cocont_functor_identity _) (F := H)
                 Homega2
           (G := H) Homega2 (K := functor_identity _) (nat_trans_id _ ) A_Galg).
 Proof.
   use 
-      (Thm47_unique hsV O Vch hsV Vch (J := functor_identity _) (pr2 O)
-                (is_omega_cocont_functor_identity hsV) (F := H)
+      (Thm47_unique O Vch Vch (J := functor_identity _) (pr2 O)
+                (is_omega_cocont_functor_identity _) (F := H)
                 Homega2
           (G := H) Homega2 (K := functor_identity _) (nat_trans_id _ ) A_Galg).
     change (carrier _) with A.
@@ -1142,8 +1142,8 @@ Lemma identityA_eq u :  (identity I + # F u)%m · A_Galg = A_Galg · u -> u = id
 Proof.
   intro eq.
   etrans;[|exact (! identityA_Thm47_mor_eq)].
-  use (Thm47_unique hsV O Vch hsV Vch (J := functor_identity _) (pr2 O)
-                (is_omega_cocont_functor_identity hsV) (F := H)
+  use (Thm47_unique O Vch Vch (J := functor_identity _) (pr2 O)
+                (is_omega_cocont_functor_identity _) (F := H)
                 Homega2
           (G := H) Homega2 (K := functor_identity _) (nat_trans_id _ ) A_Galg).
   rewrite id_left.
@@ -1171,7 +1171,7 @@ Proof.
     apply pathsinv0.
     etrans;[apply rho_bincoproductofarrows_postcomp_eq|].
     cbn -[A A_Galg].
-    use BinCoproductOfArrows_eq.
+    use maponpaths_12. 
     - apply skewmonoidal_rho_lambda_eq.
     - repeat rewrite assoc.
       etrans.
@@ -1226,7 +1226,7 @@ Qed.
 
 
 Definition AM : PIMod :=
-   make_IModule' V hsV coeqsV tensorl_coeqs _ A_action_is_retraction
+   make_IModule' V coeqsV tensorl_coeqs _ A_action_is_retraction
                         A_action_law2' ,, (ηA ,, ! ηA_action).
 
 
@@ -1245,7 +1245,7 @@ Definition μA : V ⟦ A ⊗ A , A ⟧ :=  PInitial_mor A_Galg_PInitial (P := AM
 
 
 Lemma μA_eq_aux u :
-  BinCoproductArrow V (tensor_left_bp I (F A) A) (λ'  A) (st A AM · # F u · ι₂ · A_Galg) =
+  BinCoproductArrow (tensor_left_bp I (F A) A) (λ'  A) (st A AM · # F u · ι₂ · A_Galg) =
   (identity (I ⊗ AM) + st A AM · # F u)%m · μA_aux.
 Proof.
   apply pathsinv0.
@@ -1262,8 +1262,7 @@ Qed.
 
 
 Lemma μA_ax : 
-  BinCoproductArrow
-    _ (tensor_left_bp I (F A) A)  (λ'  _) (st A AM · # F μA · ι₂  · A_Galg)
+  BinCoproductArrow (tensor_left_bp I (F A) A)  (λ'  _) (st A AM · # F μA · ι₂  · A_Galg)
   = (A_Galg #⊗ identity _) · μA.
 Proof.
   etrans;[|use (A_Galg_mor_commutes AM) ].
@@ -1271,7 +1270,7 @@ Proof.
 Qed.
 
 Lemma μA_ax2 : 
-  BinCoproductArrow  _ (tensor_left_bp I (F A) A)
+  BinCoproductArrow (tensor_left_bp I (F A) A)
                      (λ'  _ · identity _) (st A AM · # F μA · A_Falg)
   = (A_Galg #⊗ identity _) · μA.
 Proof.
@@ -1386,7 +1385,7 @@ Qed.
 
 (* Lemma A_action_is_IModule_mor : IModule_Mor V (AM ⊗M IM) AM. *)
 (*   Proof. *)
-(*     eapply (make_IModule_Mor' V hsV coeqsV tensorl_coeqs) with (f := A_action). *)
+(*     eapply (make_IModule_Mor' V coeqsV tensorl_coeqs) with (f := A_action). *)
 
 
 
@@ -1394,7 +1393,7 @@ Qed.
 
 
 Definition A_actionM : IModule_Mor V (AM ⊗M IM) AM :=
-  make_IModule_Mor' V hsV coeqsV tensorl_coeqs (Y := IM)(Z := AM) A_action A_action_is_IModule_mor.
+  make_IModule_Mor' V coeqsV tensorl_coeqs (Y := IM)(Z := AM) A_action A_action_is_IModule_mor.
 
 
 (* Nécessite de montrer que r est un morphisme de IModule *)
@@ -1441,7 +1440,7 @@ Qed.
 
 Definition μAM : IModule_Mor V (AM ⊗M AM) AM :=
      (* :=  μA ,, μA_is_IModule_mor. *)
-   (make_IModule_Mor' V hsV coeqsV tensorl_coeqs (X := AM)(Y := AM)(Z := AM) μA μA_is_IModule_mor).
+   (make_IModule_Mor' V coeqsV tensorl_coeqs (X := AM)(Y := AM)(Z := AM) μA μA_is_IModule_mor).
 
 (* Lemme A3 *)
 Lemma Aunitr : ρ A · (identity _ #⊗ ηA) · μA = identity A.
@@ -1485,7 +1484,7 @@ Lemma μA_aux_assoc :
 Proof.
   etrans;[| exact μA_aux_assoc'].
   apply cancel_postcomposition.
-  eapply (@V_IModules_assoc_postcomp _ _ _ _  IM AM).
+  eapply (@V_IModules_assoc_postcomp _ _ _  IM AM).
 Qed.
 (*
   eapply (general_lemma' (X := IM) (Y := AM) ( λM _  )).
@@ -1500,7 +1499,7 @@ Qed.
 *)
 
 Definition μAM' : PtIModule_Mor (AM ⊠M AM) AM :=
-   IModule_tensor'_Out_PtM V hsV coeqsV tensorl_coeqs μAM μA_aux_assoc μA_unit.
+   IModule_tensor'_Out_PtM V coeqsV tensorl_coeqs μAM μA_aux_assoc μA_unit.
 
 Lemma μA_associativity' :   αVM A AM AM · (identity A #⊗ μAM') · μA
   = (μA #⊗ identity _) · μA.
@@ -1521,7 +1520,7 @@ Lemma μA_associativity :   α' A A A · (identity A #⊗ μA) · μA
 Proof.
   etrans; [|exact μA_associativity'].
   apply cancel_postcomposition.
-  eapply (@V_IModules_assoc_postcomp V hsV coeqsV tensorl_coeqs AM AM).
+  eapply (@V_IModules_assoc_postcomp V coeqsV tensorl_coeqs AM AM).
 Qed.
 
 
@@ -1529,7 +1528,7 @@ Qed.
 Definition A_monoid : skewMonoid V :=
   (A ,, μA ,, ηA) ,, (! μA_associativity ,, Aunitl ,, Aunitr).
 
-Definition AM' := PtIModule_from_monoid V hsV A_monoid.
+Definition AM' := PtIModule_from_monoid V A_monoid.
 
 (* More useful for path induction *)
 Lemma AM_eq' :
@@ -1543,7 +1542,6 @@ Proof.
   apply subtypePairEquality'.
   - exact (! Aunitr_aux).
   - apply isaprop_IModule_laws.
-    exact hsV.
 Qed.
 
 Definition maponpaths_AM (P : V -> UU)(Q : ∏ (x : IModule V) , P x) : Q AM = Q AM'
@@ -1566,7 +1564,7 @@ Local Notation κ := am_alg .
 Lemma stXAM X : st X AM = st X AM'.
 Proof.
   Check (st X).
-  apply (pt_imodule_eq_tr V hsV (fun (B : V) => V ⟦ F X ⊗ (B : V), F (X ⊗ B) ⟧) (st X)).
+  apply (pt_imodule_eq_tr V (fun (B : V) => V ⟦ F X ⊗ (B : V), F (X ⊗ B) ⟧) (st X)).
   - cbn.
     apply pathsinv0.
     apply Aunitr_aux.
@@ -1577,10 +1575,10 @@ Qed.
 
 Lemma Fmonoid_equation_Galg
       (X : algMonoid st)
-    :  BinCoproductArrow _ (tensor_left_bp_gen _ _) 
+    :  BinCoproductArrow (tensor_left_bp_gen _ _) 
                              (λ'  X)
-                             (st X (PtIModule_from_monoid _ _ X) · # F (μ X) · κ X)  =
-       BinCoproductArrow _ (bc _ _) (η X) (κ X) #⊗ identity X · (μ X).
+                             (st X (PtIModule_from_monoid _ X) · # F (μ X) · κ X)  =
+       BinCoproductArrow (bc _ _) (η X) (κ X) #⊗ identity X · (μ X).
 Proof.
   apply pathsinv0.
   etrans.
@@ -1598,7 +1596,7 @@ Proof.
 Qed.
 
 Lemma A_Fmonoid_equation :
-    st A (PtIModule_from_monoid _ _ A_monoid) · # F μA · A_Falg =
+    st A (PtIModule_from_monoid _ A_monoid) · # F μA · A_Falg =
            A_Falg #⊗ identity A · μA .
 Proof.
   etrans; revgoals.
@@ -1615,7 +1613,7 @@ Definition A_Fmonoid : algMonoid st := (A_monoid ,, A_Falg) ,, A_Fmonoid_equatio
 
 Definition Fmonoid_as_Galg (X : algMonoid st) : algebra_ob G :=
   tpair (fun Z => V ⟦ G (Z : V) , (Z : V) ⟧) X
-        (BinCoproductArrow _ (bc _ _) (η X) (κ X)).
+        (BinCoproductArrow (bc _ _) (η X) (κ X)).
 
 
 (** initial morphism *)
@@ -1650,7 +1648,7 @@ And then uniqueness is trivial
  *)
 Definition iniMor_commutes_G
            (X : algMonoid st) (i := iniMor X) :
-  A_Galg · i = # G i · (BinCoproductArrow _ (bc _ _) (η X) (κ X))
+  A_Galg · i = # G i · (BinCoproductArrow (bc _ _) (η X) (κ X))
   := algebra_mor_commutes G _ (Fmonoid_as_Galg X) (InitialArrow Ai _ ).
 
 Lemma iniMor_commutes_F 
@@ -1695,19 +1693,19 @@ Lemma useful_lemma_for_i
       {P : PIMod}
       (X : algMonoid st)
        (i := iniMor X  )
-      (XM := PtIModule_from_monoid _ hsV X)
+      (XM := PtIModule_from_monoid _ X)
       {j : V ⟦ P , X ⟧} (j_is_IModule_mor : IModule_Mor_laws _ (P : IModule _) (XM : IModule _) j)
       (jM := j ,, j_is_IModule_mor : IModule_Mor V P XM)
-      (* (j_unit : ((ϵ P : IModule_Mor _ _ _) : precategory_IModule V hsV ⟦_ , _⟧) · (jM : precategory_IModule V hsV  ⟦ _, (XM : IModule _) ⟧) = (ϵ XM : IModule_Mor _ _ _)) *)
+      (* (j_unit : ((ϵ P : IModule_Mor _ _ _) : category_IModule V ⟦_ , _⟧) · (jM : category_IModule V  ⟦ _, (XM : IModule _) ⟧) = (ϵ XM : IModule_Mor _ _ _)) *)
       (j_unit : ϵ P · jM = ϵ XM)
        :
    A_Galg #⊗ identity (P) · i #⊗ j · (μ X) =
    (* la aussi il y a un choix *)
-   BinCoproductArrow  _ (tensor_left_bp _ _ _)  (λ'  P · j)
+   BinCoproductArrow (tensor_left_bp _ _ _)  (λ'  P · j)
           (* ici il y a un choix *)
                       (st _ _ · (# F (i #⊗ j))  · # F (μ X) · κ X).
 Proof.
-  set (j' := make_PtIModule_Mor _ _ jM j_unit).
+  set (j' := make_PtIModule_Mor _ jM j_unit).
   etrans.
   {
     apply cancel_postcomposition.
@@ -1722,7 +1720,7 @@ Proof.
     fold i.
     etrans;
       [| exact (functor_comp tensor (# G i #, j)
-                             (BinCoproductArrow _ _ (η X) (κ X) #, identity _
+                             (BinCoproductArrow _ (η X) (κ X) #, identity _
                                                 ))].
     apply maponpaths.
     apply dirprod_paths.
@@ -1862,19 +1860,19 @@ Definition iniMor_algMonoid (X : algMonoid st) : algMonoid_Mor A_Fmonoid X :=
 Lemma iniMor_unique (X : algMonoid st) (m : algMonoid_Mor A_Fmonoid X) :
   m = iniMor_algMonoid X.
 Proof.
-  apply (algMonoid_Mor_equiv hsV).
+  apply (algMonoid_Mor_equiv).
   set (m' := algMor_from_algMonoid_Mor m).
   assert (h' := InitialArrowUnique  Ai (Fmonoid_as_Galg X) m').
   apply (maponpaths (fun z => pr1 z)) in h'.
   exact h'.
 Qed.
 
-Definition A_isInitial : isInitial (precategory_algMonoid st) A_Fmonoid :=
-    make_isInitial (C := precategory_algMonoid st) A_Fmonoid
+Definition A_isInitial : isInitial (category_algMonoid st) A_Fmonoid :=
+    make_isInitial (C := category_algMonoid st) A_Fmonoid
                    (fun (X : algMonoid st) =>
                         make_iscontr (iniMor_algMonoid X) (iniMor_unique X)).
 
-Definition algMonoid_Initial : Initial (precategory_algMonoid st) :=
+Definition algMonoid_Initial : Initial (category_algMonoid st) :=
   make_Initial _ A_isInitial.
 
 

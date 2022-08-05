@@ -67,12 +67,12 @@ Delimit Scope morphism_scope with m.
 Delimit Scope object_scope with o.
 Open Scope object_scope.
 
-Context (V : skewmonoidal_precategory).
-Context (hsV : has_homsets V).
+Context (V : skewmonoidal_category).
+Context (hsV := homset_property V).
 
-Notation "( c , d )" := (make_precatbinprod c d).
-Notation "( f #, g )" := (precatbinprodmor f g).
-Notation "C ⊠ D" := (precategory_binproduct C D) (at level 38).
+Notation "( c , d )" := (make_catbinprod c d).
+Notation "( f #, g )" := (catbinprodmor f g).
+Notation "C ⊠ D" := (category_binproduct C D) (at level 38).
 
 (* Implicit coercions do not work for reversible notations *)
 Notation tensor := (skewmonoidal_tensor (data_from_skewmonoidal V)).
@@ -223,7 +223,7 @@ Proof.
   - intros ???; apply IModule_composition.
 Defined.
 
-Lemma is_precategory_precategory_IMod_data
+Lemma is_category_precategory_IMod_data
   : is_precategory precategory_IMod_data.
 Proof.
   repeat split; intros; simpl.
@@ -238,17 +238,21 @@ Proof.
 Qed.
 
 Definition precategory_IModule
-  : precategory := tpair _ _ is_precategory_precategory_IMod_data .
+  : precategory := tpair _ _ is_category_precategory_IMod_data .
 
-Local Notation IMOD := precategory_IModule.
+
 
 Lemma has_homsets_IModule
-  : has_homsets IMOD.
+  : has_homsets precategory_IModule.
 Proof.
   intros f g.
   apply isaset_IModule_Mor.
 Qed.
 
+Definition category_IModule
+  : category := make_category _ has_homsets_IModule.
+
+Local Notation IMOD := category_IModule.
 
 (** forgetful functor from IModule to its underlying category *)
 
@@ -1311,7 +1315,7 @@ Definition make_IModule_Mor' {X}{Y : IModule} {Z : IModule_data} (f : X ⊗M Y -
 
 Definition PtIModule := coslicecat_ob IMOD IM.
 
-Coercion IModule_from_PtIModule (x : PtIModule)(* (x : precategory_PtIModule) *) : IModule :=
+Coercion IModule_from_PtIModule (x : PtIModule)(* (x : category_PtIModule) *) : IModule :=
    pr1 x.
 
 
@@ -1438,12 +1442,24 @@ Definition PtIModule_unit_Mor (X : PtIModule) : PtIModule_Mor PtIModule_I X
                                                               := ε X ,, id_left _.
 
 
-Definition precategory_PtIModule := coslice_precat precategory_IModule IM (has_homsets_IModule _).
+Definition precategory_PtIModule := coslice_precat category_IModule IM (has_homsets_IModule _).
 
-Definition forget_PtIModules_IModules : functor precategory_PtIModule precategory_IModule
-  := coslicecat_to_cat (C := precategory_IModule) IM (has_homsets_IModule IM).
+Lemma PtIModule_has_homsets : has_homsets precategory_PtIModule.
+  hnf.
+intros.
+  apply isaset_total2 .
+  apply homset_property.
+  intro.
+  apply isasetaprop.
+  apply homset_property.
+Qed.
 
-Definition forget_PtIModules : functor precategory_PtIModule V :=
+Definition category_PtIModule := make_category _ PtIModule_has_homsets.
+
+Definition forget_PtIModules_IModules : functor category_PtIModule IMOD
+  := coslicecat_to_cat (C := category_IModule) IM (has_homsets_IModule IM).
+
+Definition forget_PtIModules : functor category_PtIModule V :=
   forget_PtIModules_IModules ∙ forget_IModules.
 
 
@@ -1513,4 +1529,4 @@ apply eqf.
 apply equ.
 Qed.
 End IModule_Definition.
-Arguments PtIModule_Mor {_}{_} _ _.
+Arguments PtIModule_Mor {_}_ _.
